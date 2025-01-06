@@ -30,13 +30,21 @@ namespace ARMagicBar.Resources.Scripts.UIIndicator
         private float circleRadiusDebug;
 
         private bool objectHasNoRenderer = false;
+
+        private Bounds currentBounds;
+        private Renderer highestRenderer; 
+
+        public Vector3 topPositionOfObject
+        {
+            get => currentBounds.max;
+        }
     
         private void Start()
         {
             mainCam = GameObject.FindObjectOfType<Camera>();
             if (selectVisualLogic == null)
             {
-                selectVisualLogic = FindObjectOfType<SelectVisualLogic>();
+                selectVisualLogic = GetComponentInParent<SelectVisualLogic>();
             }
         
             // Make sure the _transformableObjectSelectVisual is assigned
@@ -51,6 +59,7 @@ namespace ARMagicBar.Resources.Scripts.UIIndicator
             InitialBounds = TransformableObjectBounds;
             UI_TransformElements.transform.position =  new Vector3(InitialBounds.center.x,InitialBounds.max.y, InitialBounds.center.z);
             _placementObjectVisual = selectVisualLogic.GetComponentInChildren<PlacementObjectVisual.PlacementObjectVisual>();
+            currentBounds = ReturnHighestBounds(selectVisualLogic.ReturnRenderer());
         }
 
         private void Update()
@@ -58,13 +67,6 @@ namespace ARMagicBar.Resources.Scripts.UIIndicator
             if(mainCam == null || objectHasNoRenderer) return;
             UI_TransformElements.transform.position = CalculateUIPosition();
             CalculateCircleRadius();
-
-            // new Vector3(currentBounds.center.x,
-            // currentBounds.max.y, 
-            // currentBounds.center.z); 
-
-            // UI_TransformElements.transform.position = CalculateUIPosition();
-            // UI_TransformElements.transform.rotation = Quaternion.LookRotation(UI_TransformElements.transform.position - mainCam.transform.position);
         }
 
 
@@ -86,23 +88,31 @@ namespace ARMagicBar.Resources.Scripts.UIIndicator
         
             foreach (var renderer in renderers)
             {
-                if (renderer.bounds == default) continue;
+                if (renderer == null || renderer.bounds == default) continue;
             
                 float boundsMaxY = renderer.bounds.max.y;
                 if (boundsMaxY > highestY)
                 {
                     highestY = boundsMaxY;
                     highestBounds = renderer.bounds;
+                    highestRenderer = renderer;
                 }
             }
-
+            
             return highestBounds;
         }
 
         Vector3 CalculateUIPosition()
         {
-            Bounds currentBounds = ReturnHighestBounds(selectVisualLogic.ReturnRenderer());
-
+            if (highestRenderer == default)
+            {
+                currentBounds = ReturnHighestBounds(selectVisualLogic.ReturnRenderer());
+            }
+            else
+            {
+                currentBounds = ReturnHighestBounds(new List<Renderer>() { highestRenderer });
+            }
+            
             Vector3 vectorToCamera = (mainCam.transform.position - currentBounds.center).normalized;
             vectorToCamDebug = vectorToCamera;
 

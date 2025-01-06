@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ARMagicBar.Resources.Scripts.Debugging;
 using ARMagicBar.Resources.Scripts.PlacementBarUI;
@@ -9,13 +10,16 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
 {
     public class PlacementBarLogic : MonoBehaviour
     {
-        [SerializeField] private PlaceableObjectSODatabase database;
-        [SerializeField] private List<PlacementObjectSO> placementObjects = new List<PlacementObjectSO>();
+        [SerializeField] private List<PlaceableObjectSODatabase> databases = new();
+        [SerializeField] private List<(PlacementObjectSO, PlaceableObjectSODatabase)> placementObjects = new();
     
         private TransformableObject objectToPlace;
         private PlacementObjectSO placementObjectSoToPlace;
 
-        public static PlacementBarLogic Instance; 
+        [HideInInspector]
+        public static PlacementBarLogic Instance;
+
+        public event Action OnDatabaseChanged;
     
         void Awake()
         {
@@ -23,39 +27,24 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             objectToPlace = null;
             SetPlacementObjects();
         }
-
+        
         void SetPlacementObjects()
         {
-            placementObjects = new List<PlacementObjectSO>(database.PlacementObjectSos);
-        }
-        
-        public void ClearObjectToInstantiate()
-        {
-            objectToPlace = null;
-        }
-
-
-#if  UNITY_EDITOR
-    
-        public void LoadAllPlacementObjects()
-        {  
-            placementObjects.Clear();
-        
-            // Find all ScriptableObject assets of type PlacementObjectSO in the specific folder
-            string[] guids = AssetDatabase.FindAssets("t:PlacementObjectSO", new[] { "Assets/PlaceAndManipulateObjects/Resources/PlaceableObjects" });
-            foreach (string guid in guids)
+            foreach (var database in databases)
             {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                PlacementObjectSO obj = AssetDatabase.LoadAssetAtPath<PlacementObjectSO>(assetPath);
-                if (obj != null)
+                database.CleanPlacementObjectSos();
+                
+                foreach (var placementObject in database.PlacementObjectSos)
                 {
-                    placementObjects.Add(obj);
+                    placementObjects.Add((placementObject, database));
                 }
             }
         }
 
-#endif
-
+        private void RefreshDatabase()
+        {
+            PlacementBarUIElements.Instance.ReloadUIElements();
+        }
 
         private void Start()
         {
@@ -80,34 +69,41 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             objectToPlace = obj;
         }
 
+        
+        //Returns the object that is currently selected "ToPlace".
+        //Return null if nothing is selected
         public TransformableObject GetPlacementObject()
         {
             return objectToPlace;
         }
 
+        
+        //Returns the scriptable object for the object that is currently selected "ToPlace".
+        //Return null if nothing is selected
         public PlacementObjectSO GetPlacementObjectSo()
         {
             return placementObjectSoToPlace;
         }
-    
-        public PlacementObjectSO[] GetAllObjects()
+        
+        //Returns all placement objects including their corresponding database
+        public List<(PlacementObjectSO, PlaceableObjectSODatabase)> GetAllObjects()
         {
             if (placementObjects == null) return default;
         
-            return placementObjects.ToArray();
+            return placementObjects;
         }
 
-        public bool GetIsSelectedFromUI(PlacementObjectUiItem uiItemObject)
-        {
-            foreach (var placementObjectSo in placementObjects)
-            {
-                if (placementObjectSo.uiSprite == uiItemObject)
-                {
-                    return default;
-                }
-            }
-            return default;
-        }
+        // public bool GetIsSelectedFromUI(PlacementObjectUiItem uiItemObject)
+        // {
+        //     foreach (var placementObjectSo in placementObjects)
+        //     {
+        //         if (placementObjectSo.uiSprite == uiItemObject)
+        //         {
+        //             return default;
+        //         }
+        //     }
+        //     return default;
+        // }
     
     }
 }

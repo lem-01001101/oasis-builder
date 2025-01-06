@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8338018b9b047b5b08e7353922b2d4f, type: 3}
+  m_Name: MagicBar_Examples_CylindersList
+  m_EditorClassIdentifier: 
+  DatabaseName: Cylinders
+  PlacementObjectSos:
+  - {fileID: 11400000, guid: 47f0c4fe062904fbca2257fa13b19790, type: 2}
+  - {fileID: 11400000, guid: 0ce5612a8465c4b77b1ae485d502f76f, type: 2}
+  - {fileID: 11400000, guid: e3b8c842853f247da85bff3ec0017628, type: 2}

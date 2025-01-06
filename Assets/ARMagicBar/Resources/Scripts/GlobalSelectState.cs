@@ -30,8 +30,8 @@ namespace ARMagicBar.Resources.Scripts
             }
             
             TransformableObject.OnBeingDeleted += SetGlobalStateToUnselectedGameObject;
-            GizmHolderUI.OnAnyGizmoUIButtonToggled += SetGlobalStateToManipulate;
-            GizmHolderUI.OnBackToUIGizmosToggled += SetGlobalStateToSelected; 
+            GizmoHolderUI.OnAnyGizmoUIButtonToggled += SetGlobalStateToManipulate;
+            GizmoHolderUI.OnBackToUIGizmosToggled += SetGlobalStateToSelected; 
             
             
         }
@@ -50,8 +50,8 @@ namespace ARMagicBar.Resources.Scripts
             }
             
             TransformableObject.OnBeingDeleted -= SetGlobalStateToUnselectedGameObject;
-            GizmHolderUI.OnAnyGizmoUIButtonToggled -= SetGlobalStateToManipulate;
-            GizmHolderUI.OnBackToUIGizmosToggled -= SetGlobalStateToSelected; 
+            GizmoHolderUI.OnAnyGizmoUIButtonToggled -= SetGlobalStateToManipulate;
+            GizmoHolderUI.OnBackToUIGizmosToggled -= SetGlobalStateToSelected; 
 
         }
 

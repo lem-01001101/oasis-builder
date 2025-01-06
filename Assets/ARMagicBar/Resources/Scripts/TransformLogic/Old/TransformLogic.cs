@@ -56,7 +56,7 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic.Old
             _selectedAxis = SelectedAxis.none;
             
             // _manageTransformGizmoTypeVisuals = FindObjectOfType<ManageTransformGizmoTypeVisuals>();
-            GizmHolderUI.Instance.resetTransformButtonToggled += OnresetTransformButtonToggled;
+            GizmoHolderUI.Instance.resetTransformButtonToggled += OnresetTransformButtonToggled;
             ARPlacementPlaneMesh.Instance.OnSpawnObject += ResetAxis;
 
 
@@ -69,7 +69,7 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic.Old
 
         private void OnDisable()
         {
-            GizmHolderUI.Instance.resetTransformButtonToggled -= OnresetTransformButtonToggled;
+            GizmoHolderUI.Instance.resetTransformButtonToggled -= OnresetTransformButtonToggled;
             ARPlacementPlaneMesh.Instance.OnSpawnObject -= ResetAxis;
         }
 

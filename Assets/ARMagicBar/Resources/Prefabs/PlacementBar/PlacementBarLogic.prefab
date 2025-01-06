@@ -9,8 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5122629594146090194}
-  - component: {fileID: 865288013324760433}
-  - component: {fileID: 7505872374641990467}
   - component: {fileID: 2125837383927717842}
   m_Layer: 0
   m_Name: PlacementBarLogic
@@ -35,41 +33,6 @@ Transform:
   - {fileID: 6680266073635776259}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &865288013324760433
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5700218605210792494}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dddc70d3bc6144f329977d2765e11c00, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  database: {fileID: 11400000, guid: 66736f128dd2244ed80e7b44886fa75e, type: 2}
-  placementObjects: []
---- !u!114 &7505872374641990467
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5700218605210792494}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ce86567a00144352b3c934872f0b342, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  uiObjectParent: {fileID: 0}
-  uiItemPrefab: {fileID: 3521263747232048114, guid: 27c730ad010c64a27ba56642bd807d9f,
-    type: 3}
-  hideTexture: {fileID: 2800000, guid: 2a1549bcf396743b9816dbd09093e35f, type: 3}
-  paginationTexture: {fileID: 2800000, guid: 01f6d35e77e6a4c128561ab5ca391a90, type: 3}
-  enableHide: 1
-  enablePage: 1
-  testDisableUIElement: -1
-  MAX_ITEMS_PER_PAGE: 3
 --- !u!114 &2125837383927717842
 MonoBehaviour:
   m_ObjectHideFlags: 0

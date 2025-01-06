@@ -36,13 +36,13 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             mainCam = GameObject.FindObjectOfType<Camera>();
             _selectedAxis = SelectedAxis.none;
             // _manageTransformGizmoTypeVisuals = FindObjectOfType<ManageTransformGizmoTypeVisuals>();
-            GizmHolderUI.Instance.resetTransformButtonToggled += OnresetTransformButtonToggled;
+            GizmoHolderUI.Instance.resetTransformButtonToggled += OnresetTransformButtonToggled;
             ARPlacementPlaneMesh.Instance.OnSpawnObject += ResetAxis;
         }
 
         private void OnDisable()
         {
-            GizmHolderUI.Instance.resetTransformButtonToggled -= OnresetTransformButtonToggled;
+            GizmoHolderUI.Instance.resetTransformButtonToggled -= OnresetTransformButtonToggled;
             ARPlacementPlaneMesh.Instance.OnSpawnObject -= ResetAxis;
         }
 
@@ -152,26 +152,19 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
 
                     Vector3 inNormal;
 
-                    switch (_selectedAxis)
+                    if ( _selectedAxis == SelectedAxis.X || _selectedAxis == SelectedAxis.Z)
                     {
-                        case SelectedAxis.X:
-                            inNormal = Vector3.up; // Plane perpendicular to Y-axis
-                            break;
-                        case SelectedAxis.Y:
-                            inNormal = mainCam.transform.forward; // Plane perpendicular to camera forward
-                            break;
-                        case SelectedAxis.Z:
-                            inNormal = Vector3.up; // Plane perpendicular to Y-axis
-                            break;
-                        default:
-                            inNormal = mainCam.transform.forward;
-                            break;
+                        inNormal = -selectedObject.transform.up + new Vector3(0, 0, 0f); 
                     }
-
+                    else
+                    {
+                        inNormal = mainCam.transform.forward;
+                    }
+                    
                     dragPlane = new Plane(
                         inPoint: rcHit.collider.transform.position,
                         inNormal: inNormal
-                    );
+                        );
                     
                     break;
                 }
@@ -211,10 +204,30 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
 
                 // Calculate the movement vector based on the last hit point and the current hit point.
                 Vector3 movementVector = hitPoint - initialScreenPosition;
+                
+                CustomLog.Instance.InfoLog($"Initial movement vector: {movementVector}");
 
-                // Project the movement vector onto the selected axis direction.
-                movementVector = Vector3.Project(movementVector, axisDirection);
-
+                // Depending on the selected axis, you may want to constrain the movement to a specific direction.
+                switch (_selectedAxis)
+                {
+                    case SelectedAxis.X:
+                        movementVector = Vector3.Project(movementVector, transform.right); // Constrain to X-axis.
+                        break;
+                    case SelectedAxis.Y:
+                        movementVector = Vector3.Project(movementVector, transform.up); // Constrain to Y-axis.
+                        movementVector = new Vector3(0,movementVector.y,0);
+                        break;
+                    case SelectedAxis.Z:
+                        movementVector = Vector3.Project(movementVector, transform.forward); // Constrain to Z-axis.
+                        // movementVector = new Vector3(0,0 ,movementVector.z);
+                        break;
+                    case SelectedAxis.none:
+                        return;
+                }
+                
+                CustomLog.Instance.InfoLog("Transform Forwar => " + transform.forward);
+                CustomLog.Instance.InfoLog("Should apply movement to the object: " + movementVector);
+                
                 // Apply the movement vector to the selected object.
                 SelectObjectsLogic.Instance.GetSelectedObject().MoveVisual(movementVector);
 
@@ -319,20 +332,20 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             {
                 CustomLog.Instance.InfoLog("X Axis");
                 _selectedAxis = SelectedAxis.X;
-                axisDirection = Vector3.right;
+                axisDirection = transform.right;
             } 
             else if (gizmo.transform.parent.gameObject == Y ||
                      gizmo.transform.parent.parent.gameObject == Y)
             {
                 _selectedAxis = SelectedAxis.Y;
-                axisDirection = Vector3.up;
+                axisDirection = transform.up;
                 CustomLog.Instance.InfoLog("Y Axis");
             }
             else if (gizmo.transform.parent.gameObject == Z ||
                      gizmo.transform.parent.parent.gameObject == Z)
             {
                 _selectedAxis = SelectedAxis.Z;
-                axisDirection = Vector3.forward;
+                axisDirection = transform.forward;
                 CustomLog.Instance.InfoLog("Z Axis");
             } 
         }

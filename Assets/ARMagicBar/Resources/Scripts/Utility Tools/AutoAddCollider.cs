@@ -11,12 +11,16 @@ namespace ARMagicBar.Resources.Scripts.Utility_Tools
     {
         private SelectVisualLogic _selectVisualLogic;
         private List<Renderer> _transformableObjectRenderer = new();
-        private BoxCollider boxCol; 
+        private BoxCollider boxCol;
+        private PlacementObjectVisual.PlacementObjectVisual _placementObjectVisual;
     
         void Start()
         {
+            _placementObjectVisual = GetComponentInChildren<PlacementObjectVisual.PlacementObjectVisual>();
             _selectVisualLogic = GetComponent<SelectVisualLogic>();
             _transformableObjectRenderer = GetRendererFromComponent();
+            
+            if(HasObjectColliderInChildren()) return;
         
             CustomLog.Instance.InfoLog("_transformab_transformableObjectRendererleObjectRenderer: "
                                        + _transformableObjectRenderer + "Count ==" + _transformableObjectRenderer.Count);
@@ -24,7 +28,9 @@ namespace ARMagicBar.Resources.Scripts.Utility_Tools
 
             if (_transformableObjectRenderer != null && _transformableObjectRenderer.Count != 0)
             {
-                AddMeshColliderToObject(_transformableObjectRenderer);
+
+                AddBoxColliderWithRendererBounds(_transformableObjectRenderer);
+                // AddMeshColliderToObject(_transformableObjectRenderer);
             }
             else
             {
@@ -33,22 +39,44 @@ namespace ARMagicBar.Resources.Scripts.Utility_Tools
             }
         }
 
+        bool HasObjectColliderInChildren()
+        {
+            if (_placementObjectVisual)
+            {
+                CustomLog.Instance.InfoLog("HasObjectColliderInChildren: " + _placementObjectVisual.gameObject.name);
+                
+                return _placementObjectVisual.gameObject.GetComponent<Collider>() ||
+                       _placementObjectVisual.gameObject.GetComponentInChildren<Collider>();
+            }
+
+            return false;
+        }
+
         List<Renderer> GetRendererFromComponent()
         {
-        
             if (_selectVisualLogic)
             {
                 return _selectVisualLogic.ReturnRenderer();
             }
-
-
+            
             return null;
+        }
+
+        void AddBoxColliderWithRendererBounds(List<Renderer> renderers)
+        {
+            foreach (var renderer in renderers)
+            {
+                CustomLog.Instance.InfoLog("Adding new box collider to object");
+                BoxCollider newCollider = _placementObjectVisual.AddComponent<BoxCollider>();
+                newCollider.center = new Vector3(0,0,0);
+                newCollider.size = renderer.bounds.size;
+            }
         }
 
         void AddBoxColliderToObject()
         {
             CustomLog.Instance.InfoLog("Adding Box Collider to object!");
-            boxCol = transform.AddComponent<BoxCollider>();
+            boxCol = _placementObjectVisual.AddComponent<BoxCollider>();
             boxCol.size = GetComponentInChildren<PlacementObjectVisual.PlacementObjectVisual>().transform.localScale;
         }
 

@@ -12,6 +12,8 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
     [RequireComponent(typeof(TransformableObject))]
     public class SelectVisualLogic : MonoBehaviour
     {
+        [SerializeField] private bool deactivateSelectionMaterial; 
+        
         // [SerializeField] private Transform visual;
         [SerializeField] private Material selectedMaterial;
         [SerializeField] private Material selectedMaterialURP;
@@ -34,6 +36,7 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
         
         private TransformableObject _transformableObject;
 
+
         private void Awake()
         {
             objectRenderers = GetRenderer();
@@ -44,7 +47,6 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
                 SetSelectMaterials();
             }
         }
-        
         public List<Renderer> ReturnRenderer()
         {
             return objectRenderers;
@@ -55,13 +57,14 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
         {
             List<Renderer> childRenderer = new List<Renderer>();
             CustomLog.Instance.InfoLog("Get Renderer");
+            
             if (GetComponentInChildren<PlacementObjectVisual.PlacementObjectVisual>())
             {
                 PlacementObjectVisual.PlacementObjectVisual objectVisual = GetComponentInChildren<PlacementObjectVisual.PlacementObjectVisual>();
                 parentOfRenderer = objectVisual.transform;
                 
                 
-                if (objectVisual.GetComponent<Renderer>())
+                if (objectVisual.GetComponent<Renderer>() && (!objectVisual.GetComponent<LODGroup>() && !objectVisual.GetComponentInChildren<LODGroup>()))
                 {
                     if (!objectVisual.GetComponent<ParticleSystem>())
                     {
@@ -103,11 +106,12 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
         }
 
 
+        private bool isURP;
         
         //Check for URP
         void SetSelectedMaterialDependingOnRP()
         {
-            bool isURP = GraphicsSettings.renderPipelineAsset != null &&
+            isURP = GraphicsSettings.renderPipelineAsset != null &&
                          GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("Universal");
             
             if (isURP)
@@ -120,7 +124,6 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             }
             
             CustomLog.Instance.InfoLog("Detected Render Pipeline URP? " + isURP);
-
         }
 
         //Add selected Material state 
@@ -144,13 +147,17 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
                 Material[] currentBaseMaterials = rendererBaseSelectMaterialDict.Values.ElementAt(i).Item1;
                 
                 rendererBaseSelectMaterialDict.Remove(currentKey);
+                
+                
                 rendererBaseSelectMaterialDict.Add(currentKey,(currentBaseMaterials, selectMaterials));
             }
         }
 
+
+
         private void Start()
         {
-            Hide();
+            // Hide();
             _transformableObject = GetComponent<TransformableObject>();
             _transformableObject.OnWasSelected += TransformableObjectWasSelected;
             SelectObjectsLogic.Instance.OnDeselectAll += Hide;
@@ -165,34 +172,66 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             }
             else
             {
+                //check if the base materials have been changed
+                // RefreshBaseMaterials(); 
                 Hide();
             }
         }
 
         private void OnDestroy()
         {
-
             SelectObjectsLogic.Instance.OnDeselectAll -= Hide;
             
             if(_transformableObject)
                 _transformableObject.OnWasSelected -= TransformableObjectWasSelected;
         }
         
-        void Show()
+        private void Show()
         {
-            for (int i = 0; i < rendererBaseSelectMaterialDict.Count; i++)
+            if (deactivateSelectionMaterial) return;
+
+            for (int i = 0; i < objectRenderers.Count; i++)
             {
-                rendererBaseSelectMaterialDict.Keys.ElementAt(i).sharedMaterials =
-                    rendererBaseSelectMaterialDict.Values.ElementAt(i).Item2;
+                Renderer renderer = objectRenderers[i];
+                Material[] selectMaterials = rendererBaseSelectMaterialDict[renderer].Item2;
+                renderer.sharedMaterials = selectMaterials;
             }
         }
 
-        void Hide()
+        private void RefreshBaseMaterials()
         {
             for (int i = 0; i < rendererBaseSelectMaterialDict.Count; i++)
             {
-                rendererBaseSelectMaterialDict.Keys.ElementAt(i).sharedMaterials =
-                    rendererBaseSelectMaterialDict.Values.ElementAt(i).Item1;
+                Renderer renderer = rendererBaseSelectMaterialDict.Keys.ElementAt(i);
+                Material[] currentMaterials = renderer.sharedMaterials
+                    .Where(mat => mat != selectedMaterial && mat != selectedMaterialURP)
+                    .ToArray();
+
+                CustomLog.Instance.InfoLog("Setting the material of  Renderer" +  rendererBaseSelectMaterialDict.Keys.ElementAt(i).name + " to "
+                    );
+
+                foreach (var currentMat in currentMaterials)
+                {
+                    CustomLog.Instance.InfoLog("currentMat name: "+ currentMat.name);
+                }
+                
+                rendererBaseSelectMaterialDict[renderer] = (currentMaterials, rendererBaseSelectMaterialDict[renderer].Item2);
+            }
+        }
+
+        private void Hide()
+        {
+            if (deactivateSelectionMaterial) return;
+            
+            RefreshBaseMaterials();
+            SetSelectMaterials();
+
+
+            for (int i = 0; i < objectRenderers.Count; i++)
+            {
+                Renderer renderer = objectRenderers[i];
+                Material[] baseMaterials = rendererBaseSelectMaterialDict[renderer].Item1;
+                renderer.sharedMaterials = baseMaterials;
             }
         }
     }

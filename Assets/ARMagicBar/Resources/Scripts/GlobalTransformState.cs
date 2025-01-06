@@ -14,7 +14,7 @@ namespace ARMagicBar.Resources.Scripts
              private set => _transformState = value;
         }
         
-        private void Start()
+        private void Awake()
         {
             _Instance = this; 
         }

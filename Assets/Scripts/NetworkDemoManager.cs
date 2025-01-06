@@ -8,6 +8,13 @@ using TMPro;
 
 public class NetworkDemoManager : MonoBehaviour
 {
+
+   [SerializeField]
+   private Texture2D _targetImage;
+
+   [SerializeField]
+   private float _targetImageSize;
+
     [SerializeField]
     private TMP_Text _statusText;
 
@@ -33,6 +40,7 @@ public class NetworkDemoManager : MonoBehaviour
             // Set SharedSpaceManager and start it
       _sharedSpaceManager.sharedSpaceManagerStateChanged += OnColocalizationTrackingStateChanged;
 
+         /*
              // Set room to join
         var mockTrackingArgs = ISharedSpaceTrackingOptions.CreateMockTrackingOptions();
         var roomArgs = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(
@@ -41,6 +49,16 @@ public class NetworkDemoManager : MonoBehaviour
             "vps colocalization demo (mock mode)" // description
         );
         _sharedSpaceManager.StartSharedSpace(mockTrackingArgs, roomArgs);
+        */
+        var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(
+            _targetImage, _targetImageSize);
+         var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(
+            "ImageTrackingDemoRoom",
+            32, // Max capacity
+            "image tracking colocalization demo"
+         );
+
+         _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
     }
 
    private void OnColocalizationTrackingStateChanged(

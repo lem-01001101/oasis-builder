@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dac3f5aaaf444bca8d085f50e9af70a, type: 3}
+  m_Name: Spell_Green_PlaceableObject
+  m_EditorClassIdentifier: 
+  nameOfObject: Spell_Green(Clone)
+  uiSprite: {fileID: 2800000, guid: 07afa5b494701462fb3c319b95986c27, type: 3}
+  placementObject: {fileID: 8136880687437797320, guid: 78f794443a30e4ae4970a3ace51caed0,
+    type: 3}
+  enableInUI: 1
+  enableToSelect: 1
+  enableAmountInInventory: 0
+  amountInInventory: 0
+  IsPlaceable: 0

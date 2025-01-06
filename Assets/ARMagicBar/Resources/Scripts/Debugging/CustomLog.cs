@@ -55,6 +55,14 @@ namespace ARMagicBar.Resources.Scripts.Debugging
             if (Instance.LogLevel != CustomLogLevel.error && Instance.LogLevel != CustomLogLevel.all || Instance.LogLevel == CustomLogLevel.none) return;
             Debug.LogError(message);
         }
+        
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
     }
 
     public enum CustomLogLevel

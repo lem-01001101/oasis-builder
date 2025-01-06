@@ -1,20 +1,50 @@
 using System;
 using System.Collections.Generic;
 using ARMagicBar.Resources.Scripts.Debugging;
+using ARMagicBar.Resources.Scripts.GizmoUI.Custom_Interactions;
+using ARMagicBar.Resources.Scripts.Other;
 using ARMagicBar.Resources.Scripts.TransformLogic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace ARMagicBar.Resources.Scripts.GizmoUI
 {
-    public class GizmHolderUI : MonoBehaviour
+    public class GizmoHolderUI : MonoBehaviour
     {
+        [SerializeField] public GameObject selectInteractionTypeCanvas;
+        [SerializeField] public GameObject customInteractionHolderCanvas; 
         [SerializeField] public GameObject  gizmoHolderCanvas;
+
+        private bool hasCustomInteractions = false;
+
+        public bool HasCustomInteraction
+        {
+            set => hasCustomInteractions = value;
+            get => hasCustomInteractions;
+        }
+
+        private bool enableTransform = true;
+
+        public bool EnableTransform
+        {
+            set => enableTransform = value;
+            get => enableTransform;
+        }
+        
         [SerializeField] public MoveGizmoUI moveGizmoUI;
         [SerializeField] public RotateGizmoUI rotateGizmoUI;
         [SerializeField] public ScaleGizmoUI scaleGizmoUI;
         [SerializeField] public BackToGizmoUI backToGizmoUI;
+        [SerializeField] public DeleteObjectGizmoUI deleteObjectGizmoUI;
         [SerializeField] public ResetTransformGizmoUI resetTransformGizmoUI;
+        [SerializeField] public CustomInteractionsHolderUI customInteractionHolderUI;
+        [SerializeField] public SelectTransformGizmoUI selectTransformGizmoUI;
+        [SerializeField] public SelectTypeOfInteractionUI selectTypeOfInteractionUI;
+
+        [SerializeField] private CustomInteractionManager customInteractionsManager;
+        [SerializeField] private EnableDisableInteractionsOnStart enableDisableInteractionsOnStart;
+        
         public List<IGizmos> iGizmos; 
         
         //Reference to the buttons
@@ -23,10 +53,10 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
         [SerializeField] public Button scaleButtonReference;
         [SerializeField] public Button deleteButtonReference;
         [SerializeField] public Button backButtonReference;
-        [SerializeField] public Button resetTransformButtonReference; 
+        [SerializeField] public Button resetTransformButtonReference;
 
         public event Action moveButtonToggled;
-        public event Action rotateButtonToggled;
+        public event Action rotateButtonToggled;  
         public event Action scaleButtonToggled;
         public event Action deleteButtonToggled;
 
@@ -40,11 +70,11 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
         private Camera mainCamera;
 
 
-        public static GizmHolderUI Instance;  
+        public static GizmoHolderUI Instance;  
         
         void AddGizmos()
         {
-            iGizmos = new List<IGizmos>() { moveGizmoUI, rotateGizmoUI, scaleGizmoUI, resetTransformGizmoUI};
+            iGizmos = new List<IGizmos>() { moveGizmoUI, rotateGizmoUI, scaleGizmoUI, resetTransformGizmoUI };
         }
 
 
@@ -59,25 +89,31 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
             Instance = this;
             _transformableObject = GetComponentInParent<TransformableObject>();
             
+
+            if (customInteractionHolderCanvas != null && customInteractionsManager.GetAmountOfCustomInteractions() > 0)
+            {
+                hasCustomInteractions = true;
+            }            
+            
             if (mainCamera == default)
             {
                 mainCamera = FindObjectOfType<Camera>();
                 SetCanvasCamera();
             }
-
         }
 
         private void OnDestroy()
         {
-            _transformableObject.OnWasSelected -= TransformableObjectOnOnWasSelected; 
+            _transformableObject.OnWasSelected -= OnTransformableObjectWasSelected; 
             SelectObjectsLogic.Instance.OnDeselectAll -= TransformableObjectOnDeselectAll;
         }
 
         private void Start()
         {
             AddGizmos();
-            _transformableObject.OnWasSelected += TransformableObjectOnOnWasSelected; 
+            _transformableObject.OnWasSelected += OnTransformableObjectWasSelected; 
             SelectObjectsLogic.Instance.OnDeselectAll += TransformableObjectOnDeselectAll;
+            
             
             resetTransformButtonReference.onClick.AddListener(() =>
             {
@@ -131,12 +167,96 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
                 deleteButtonToggled?.Invoke();
             });
             
+            selectTypeOfInteractionUI.OnSelectTransformInteractionButtonClicked += SelectTypeOfInteractionUIOnOnSelectTransformInteractionButtonClicked;
+            selectTypeOfInteractionUI.OnSelectCustominteractionButtonClicked += SelectTypeOfInteractionUIOnOnSelectCustominteractionButtonClicked;
+            
             mainCamera = FindObjectOfType<Camera>();
 
 
             HideBackToGizmoUI();
             HideTransformElements();
+            HideSelectTypeOfInteractionGUI();
+            HideCustomInteractions();
+
         }
+        
+
+        private void SelectTypeOfInteractionUIOnOnSelectCustominteractionButtonClicked()
+        {
+            HideSelectTypeOfInteractionGUI();
+            ShowCustomInteractionHolder();
+        }
+
+        private void SelectTypeOfInteractionUIOnOnSelectTransformInteractionButtonClicked()
+        {
+            HideSelectTypeOfInteractionGUI();
+            ShowTransformInteractions();
+        }
+
+        public void HideMoveGizmo()
+        {
+            moveGizmoUI.Hide();
+        }
+
+        public void ShowMoveGizmo()
+        {
+            moveGizmoUI.Show();
+        }
+
+        public void HideRotateGizmo()
+        {
+            rotateGizmoUI.Hide();
+        }
+
+        public void ShowRotateGizmo()
+        {
+            rotateGizmoUI.Show();
+        }
+
+        public void HideScaleGizmo()
+        {
+            scaleGizmoUI.Hide();
+        }
+
+        public void ShowScaleGizmo()
+        {
+            scaleGizmoUI.Show();
+        }
+
+        public void HideResetTransformGizmo()
+        {
+            resetTransformGizmoUI.Hide();
+        }
+
+        public void ShowResetTransformGizmo()
+        {
+            resetTransformGizmoUI.Show();
+        }
+
+        public void HideDeleteUIObject()
+        {
+            if (deleteObjectGizmoUI)
+            {
+                deleteObjectGizmoUI.Hide();
+            }
+            else
+            {
+                Debug.LogWarning(AssetName.NAME + " delete object Gizmo is null, you maybe use this method on a 0.78 version asset. Please recreate this Asset with Version 1.0 or later.");
+            }
+        }
+
+        public void ShowDeleteUIObject()
+        {
+            if (deleteObjectGizmoUI)
+            {
+                deleteObjectGizmoUI.Show();
+            }
+            else
+            {
+                Debug.LogWarning(AssetName.NAME + " delete object Gizmo is null, you maybe use this method on a 0.78 version asset. Please recreate this Asset with Version 1.0 or later.");
+            }
+        }
+        
         
         private void Update()
         {
@@ -148,12 +268,60 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
         
         private void TransformableObjectOnDeselectAll()
         {
+            CustomLog.Instance.InfoLog("Deselect All!");
             HideTransformElements();
+            HideSelectTypeOfInteractionGUI();
+            HideCustomInteractions();
         }
 
-        private void TransformableObjectOnOnWasSelected(bool obj)
+        private void OnTransformableObjectWasSelected(bool obj)
+        {
+            if (!hasCustomInteractions && enableTransform)
+            {
+                ShowTransformElements();
+                return;
+            }  
+            
+            if (!enableTransform &&  hasCustomInteractions)
+            {
+                CustomLog.Instance.InfoLog("GizmoHolderUI hasCustom Interaction but no Transform");
+                ShowCustomInteractionHolder();
+                return;
+            }
+
+            ShowSelectInteractionGUI();
+
+        }
+
+
+        void ShowSelectInteractionGUI()
+        {
+            selectTypeOfInteractionUI.Show();
+        }
+
+        void HideSelectTypeOfInteractionGUI()
+        {
+            selectTypeOfInteractionUI.Hide();
+        }
+        
+        void ShowTransformInteractions()
         {
             ShowTransformElements();
+        }
+
+        void ShowCustomInteractionHolder()
+        {
+            customInteractionHolderUI.Show();
+        }
+
+        void ShowCustomInteractions()
+        {
+            
+        }
+
+        void HideCustomInteractions()
+        {
+            customInteractionHolderUI.Hide();
         }
 
 
@@ -176,6 +344,16 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
         public void HideTransformElements()
         {
             gizmoHolderCanvas.SetActive(false); 
+        }
+
+        public void HideShowTransformElementsButton()
+        {
+            selectTransformGizmoUI.gameObject.SetActive(false);
+        }
+
+        public void ShowShowTransformElementsButton()
+        {
+            selectTransformGizmoUI.gameObject.SetActive(true);
         }
         
     }

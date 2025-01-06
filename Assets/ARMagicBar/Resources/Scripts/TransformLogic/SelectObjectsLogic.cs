@@ -19,9 +19,17 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
         private Camera mainCam;
 
         public static SelectObjectsLogic Instance;
+        
+        //Fires when object is deselected
         public event Action OnDeselectAll;
+        
+        //Fires when object is selected
         public event Action OnSelectObject;
 
+        //Fires when Object is selected, contains info
+        public event Action<TransformableObject> OnSelectObjectInfo;
+        
+        //Fires when a gizmo (XYZ) is selected
         public event Action<GameObject> OnGizmoSelected;
 
         // public event Action<Vector3> OnGizmoMoved;  
@@ -49,17 +57,21 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             mainCam = FindObjectOfType<Camera>();
         }
 
+        public void DeselectAllObjects()
+        {
+            OnDeselectAll?.Invoke();
+        }
+
         public TransformableObject GetSelectedObject()
         {
             return selectedObject;
         }
-
+        
         public void DeleteSelectedObject()
         {
             selectedObject.Delete();
         }
-
-
+        
         void Update()
         {
             if(FindObjectOfType<EventSystem>() ==false) return;
@@ -71,16 +83,8 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             if (GlobalSelectState.Instance.GetTransformstate() ==
                 SelectState.manipulating) return;
             
-            if(disableTransformOptions) return;
-
-            if (ARPlacementPlaneMesh.justPlaced)
-            {
-                ARPlacementPlaneMesh.justPlaced = false;
-                return;
-            }
+            if(disableTransformOptions) return; 
             
-            // CustomLog.Instance.InfoLog("Straight after disableTransformOptions");
-
 #if UNITY_EDITOR
             //If not manipulating objects transform
             if (Input.GetMouseButtonDown(0))
@@ -115,7 +119,6 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
                 }
                 TouchToRayCasting(touch.position);
             }
-
 #endif
         }
 
@@ -155,14 +158,26 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
                       objectThatWasHit.name);
             
             //Only one objects should be selected at a time
+            
             TransformableObject obj;
             if (objectThatWasHit.GetComponentInParent<TransformableObject>())
             {
+                
+                //If transformable object -> Should be selected = false, => Return
+                
                 OnDeselectAll?.Invoke();
                 selectedObject = null;
-
                 
-                obj = objectThatWasHit.GetComponentInParent<TransformableObject>(); 
+                obj = objectThatWasHit.GetComponentInParent<TransformableObject>();
+                if(obj.CanObjectBeSelected == false) return;
+
+
+                if (obj.CanObjectBeSelected == false)
+                {
+                    CustomLog.Instance.InfoLog("Object can't be selected.");
+                    return;
+                }
+                
                 selectedObject = obj;
                 if (obj.GetSelected())
                 {
@@ -172,6 +187,7 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
                 
                 obj.SetSelected(true);
                 OnSelectObject?.Invoke();
+                OnSelectObjectInfo?.Invoke(obj);
             }
             else
             {

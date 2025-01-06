@@ -1,7 +1,11 @@
 using System;
 using ARMagicBar.Resources.Scripts.Debugging;
 using ARMagicBar.Resources.Scripts.GizmoUI;
+using ARMagicBar.Resources.Scripts.PlacementBar;
+using ARMagicBar.Resources.Scripts.PlacementObjects;
+using ARMagicBar.Resources.Scripts.UIIndicator;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ARMagicBar.Resources.Scripts.TransformLogic
 {
@@ -12,6 +16,8 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
     {
         // [SerializeField] private GameObject SelectedVisual;
         [SerializeField] private GameObject TransformableObjectReference;
+        [SerializeField] private ReferenceToSO _referenceToSo;
+        
         private GameObject Visual;
 
         private Vector3 visualOriginalTransformPosition;
@@ -25,14 +31,48 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
 
         private Vector3 uiOriginalTransformPosition; 
         private Quaternion uiOriginalTransformRotation; 
-        private Vector3 uiOriginalTransformScale; 
+        private Vector3 uiOriginalTransformScale;
 
+        private bool canObjectBeSelected = true;
+
+        //Set if the object can be selected
+        public bool CanObjectBeSelected
+        {
+            get => canObjectBeSelected;
+            set => canObjectBeSelected = value;
+        }
         
         private bool IsSelected;
+        
+        //Element was selected
         public event Action<bool> OnWasSelected;
+        
+        
+        //Element is being deleted
         public static event Action<GameObject> OnBeingDeleted;
 
+        private ControlPosition_TransformSelector_UI_Indicator uiPosition;
 
+        public PlacementObjectSO GetCorrespondingPlacementObject
+        {
+            get => _referenceToSo.correspondingObject;
+        }
+
+        public event Action OnWasMoved;
+
+        public Vector3 HighestPoint()
+        {
+            if (uiPosition)
+            {
+                return uiPosition.topPositionOfObject;
+            }
+            else
+            {
+                CustomLog.Instance.ErrorLog("Did not find the uiPositionScript in children");
+                return Vector3.zero;
+            }
+        }
+        
         private void OnEnable()
         {
             TransformableObjectReference = this.transform.gameObject;
@@ -46,6 +86,7 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             visualOriginalTransformPosition = Visual.transform.localPosition;
             visualOriginalTransformRotation = Visual.transform.localRotation;
             visualOriginalTransformScale = Visual.transform.localScale;
+            uiPosition = GetComponentInChildren<ControlPosition_TransformSelector_UI_Indicator>();
         }
 
         UnityEngine.Transform GetVisual()
@@ -77,16 +118,17 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
 
         private void Start()
         {
-            GizmHolderUI.Instance.deleteButtonToggled += Delete;
+            GizmoHolderUI.Instance.deleteButtonToggled += Delete;
         }
 
         private void OnDestroy()
         {
-            GizmHolderUI.Instance.deleteButtonToggled -= Delete;
+            GizmoHolderUI.Instance.deleteButtonToggled -= Delete;
         }
 
         public void MoveVisual(Vector3 movementVector)
         {
+            CustomLog.Instance.InfoLog("Should move visual " + gameObject.name);
             transform.position += movementVector;
         }
 
@@ -134,8 +176,10 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
         }
 
         //Get's called externally by the select logic
-        public void SetSelected(bool isSelected)
+        public bool SetSelected(bool isSelected)
         {
+            if(!canObjectBeSelected) return false;
+            
             CustomLog.Instance.InfoLog("Got Selected " + gameObject.name);
             if (isSelected)
             {
@@ -145,7 +189,9 @@ namespace ARMagicBar.Resources.Scripts.TransformLogic
             {
                 OnWasSelected?.Invoke(false);
             }
-            
+
+            return true;
+
         }
     }
 }

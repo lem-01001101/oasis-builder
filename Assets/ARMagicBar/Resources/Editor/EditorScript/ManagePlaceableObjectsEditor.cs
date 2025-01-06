@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using ARMagicBar.Resources.Scripts.Debugging;
 using ARMagicBar.Resources.Scripts.PlacementBar;
 using ARMagicBar.Resources.Scripts.PlacementObjects;
@@ -13,8 +16,6 @@ namespace ARMagicBar.Resources.Editor.EditorScript
 {
     public class ManagePlaceableObjectsEditor : EditorWindow
     {
-        [SerializeField] private GameObject prefab;
-    
         private PlaceableObjectSODatabase _placeableObjectSoDatabase;
     
         private List<GameObject> prefabs = new List<GameObject>();
@@ -30,6 +31,8 @@ namespace ARMagicBar.Resources.Editor.EditorScript
         private const string maxPrefabMessage =
             "Max placement objects reached for this database. You can create another one or delete unused objects.";
     
+
+        [SerializeField]
         private TransformableObject placeableObjectTemplate;
     
     
@@ -48,6 +51,63 @@ namespace ARMagicBar.Resources.Editor.EditorScript
             EditorUtility.SetDirty(_placeableObjectSoDatabase); // Mark it dirty to ensure it saves
             AssetDatabase.SaveAssets();
         }
+        
+        private void RefreshAssetDatabase()
+        {
+            RemoveMissingPrefabsFromDatabase();
+            AssetDatabase.Refresh();
+        }
+        
+        private string GetDatabaseDirectory()
+        {
+            if (_placeableObjectSoDatabase == null)
+            {
+                Debug.LogError("PlaceableObjectSODatabase is not assigned.");
+                return null;
+            }
+            
+            // Refresh the asset database to ensure all paths are up to date
+            RefreshAssetDatabase();
+
+            string assetPath = AssetDatabase.GetAssetPath(_placeableObjectSoDatabase);
+    
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                Debug.LogError("Could not find the asset path for PlaceableObjectSODatabase.");
+                return null;
+            }
+
+            // Extract the directory from the asset path
+            string directoryPath = Path.GetDirectoryName(assetPath);
+
+            if (string.IsNullOrEmpty(directoryPath))
+            {
+                Debug.LogError("Could not determine the directory path from the asset path.");
+                return null;
+            }
+
+            return directoryPath;
+        }
+
+        private void CheckSaveDirectory()
+        {
+            string directoryPath = GetDatabaseDirectory();
+
+            if (directoryPath == null)
+            {
+                Debug.LogError("Failed to determine the save directory path.");
+                return;
+            }
+
+            if (Directory.Exists(directoryPath))
+            {
+                CustomLog.Instance.InfoLog("Save directory exists: " + directoryPath);
+            }
+            else
+            {
+                Debug.LogError("Error: Save directory does not exist - " + directoryPath);
+            }
+        }
 
         private void OnInspectorUpdate()
         {
@@ -60,45 +120,18 @@ namespace ARMagicBar.Resources.Editor.EditorScript
             CustomLog.EnsureInstance();
 
             if(_placeableObjectSoDatabase == null)
-                FindOrCreateDatabase();
+                Debug.LogWarning("AR Magic Bar has no database. You can create a new one on your asset window, right click -> Create -> AR Magic Bar -> PlaceableobjectDatabase and assign it.");
+            //     FindOrCreateDatabase();
         
         
-            LoadPlaceableObjectTemplate();
+            // LoadPlaceableObjectTemplate();
+            InitializePlaceableObjectTemplate();
             RefreshExistingPlaceableObjects();
         }
 
-
-        void FindOrCreateDatabase() {
-        
-            CustomLog.EnsureInstance();
-
-        
-            string searchFilter = "t:PlaceableObjectSODatabase";
-            string[] results = AssetDatabase.FindAssets(searchFilter);
-            if (results.Length > 0) {
-                string path = AssetDatabase.GUIDToAssetPath(results[0]);
-                _placeableObjectSoDatabase = AssetDatabase.LoadAssetAtPath<PlaceableObjectSODatabase>(path);
-            } else {
-                // No database found, create a new one
-                CreateNewDatabase();
-            }
-        }
-
-        void CreateNewDatabase() {
-            CustomLog.EnsureInstance();
-        
-            _placeableObjectSoDatabase = ScriptableObject.CreateInstance<PlaceableObjectSODatabase>();
-            string assetPath = "Assets/ARMagicBar/PlaceableObjectsDatabase/PlaceableObjectDatabase.asset";
-            AssetDatabase.CreateAsset(_placeableObjectSoDatabase, assetPath);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            CustomLog.Instance.InfoLog(("Created new PlaceableObjectSODatabase at: " + assetPath));
-        }
-
         private int selectedIndex = -1;
-
-
-        void LoadPlaceableObjectTemplate()
+        
+        private void InitializePlaceableObjectTemplate()
         {
             CustomLog.EnsureInstance();
 
@@ -115,125 +148,222 @@ namespace ARMagicBar.Resources.Editor.EditorScript
                 }
             }
         }
+        
+    void OnGUI()
+    {        
+        CustomLog.EnsureInstance();
 
+        EditorGUILayout.BeginVertical(); // Begin Vertical Layout
+        GUILayout.Label("Manage Placeable Objects", EditorStyles.boldLabel);
+        // Object field for the database
+        _placeableObjectSoDatabase = EditorGUILayout.ObjectField("Placeable Object Database", _placeableObjectSoDatabase, typeof(PlaceableObjectSODatabase), false) as PlaceableObjectSODatabase;
 
-        void OnGUI()
-        {        
-            CustomLog.EnsureInstance();
-
-            EditorGUILayout.BeginVertical();
-            GUILayout.Label("Manage Placeable Objects", EditorStyles.boldLabel);
-
-            // Allow the user to assign the database via drag-and-drop or by selecting with the Object Picker
-            _placeableObjectSoDatabase = EditorGUILayout.ObjectField("Placeable Object Database", _placeableObjectSoDatabase, typeof(PlaceableObjectSODatabase), false) as PlaceableObjectSODatabase;
-
-            if (_placeableObjectSoDatabase == null)
+        
+        GUILayout.Label("Template for the placeable object", EditorStyles.boldLabel);
+        placeableObjectTemplate = EditorGUILayout.ObjectField("Placeable Object Template", placeableObjectTemplate, typeof(TransformableObject), false) as TransformableObject;
+        
+        if (_placeableObjectSoDatabase == null)
+        {
+            EditorGUILayout.HelpBox("Please assign a PlaceableObjectSODatabase.", MessageType.Warning);
+        }
+        else
+        {
+            if (GUILayout.Button("Refresh Database"))
             {
-                EditorGUILayout.HelpBox("Please assign a PlaceableObjectSODatabase.", MessageType.Warning);
+                RefreshExistingPlaceableObjects();
+            }
+
+            GUILayout.Label("Prefab and Image Editor", EditorStyles.boldLabel);
+
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition); // Begin Scroll View
+
+            if (prefabs.Count <= 30)
+            {
+                if (GUILayout.Button("Add Pair"))
+                {
+                    CustomLog.Instance.InfoLog("Adding prefab, count is" + prefabs.Count);
+                    prefabs.Add(null);
+                    images.Add(null);
+                }
+            }
+
+            for (int i = 0; i < prefabs.Count; i++)
+            {
+                GUILayout.BeginHorizontal(); // Begin Horizontal Layout
+
+                prefabs[i] = EditorGUILayout.ObjectField("Prefab", prefabs[i], typeof(GameObject), false) as GameObject;
+                images[i] = EditorGUILayout.ObjectField("Image", images[i], typeof(Sprite), false) as Sprite;
+
+                if (GUILayout.Button("Delete", GUILayout.Width(60)))
+                {
+                    // Safely remove elements here (handled below)
+                    SafeRemoveAt(i);
+                }
+
+                GUILayout.EndHorizontal(); // End Horizontal Layout
+            }
+            GUILayout.EndScrollView(); // End Scroll View
+
+            if (GUILayout.Button("Create Placeable Objects"))
+            {
+                CreatePlaceableObjects();
+            }
+            
+            GUILayout.Space(20); // Add space before the Recreate Prefabs button
+
+            HandleRecreatePrefabsButton(); // Add the Recreate Prefabs button with double-click functionality
+
+            GUILayout.Space(20); // Add space after the Recreate Prefabs button
+        }
+        EditorGUILayout.EndVertical(); // End Vertical Layout
+    }
+    
+    
+    private double lastClickTime = 0;
+    private const double doubleClickDelay = 0.3;
+    private bool isAwaitingSecondClick = false;
+    private double lastInteractionTime = 0;
+
+
+    private void HandleRecreatePrefabsButton()
+    {
+        Event e = Event.current;
+        
+        // Reset button color after rendering it
+        GUI.backgroundColor = Color.white;
+
+        // Change the color of the button if awaiting the second click
+        if (isAwaitingSecondClick)
+        {
+            GUI.backgroundColor = Color.red;
+        }
+        
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+
+        if (GUILayout.Button("Recreate Prefabs", GUILayout.Height(20), GUILayout.Width(200)))
+        {
+            double timeSinceLastClick = EditorApplication.timeSinceStartup - lastClickTime;
+            if (timeSinceLastClick < doubleClickDelay && isAwaitingSecondClick)
+            {
+                RecreatePrefabs(); // Only execute if it's a double-click
+                ResetButtonState(); // Reset the button state and color
             }
             else
             {
-                if (GUILayout.Button("Refresh Database"))
-                {
-                    RefreshExistingPlaceableObjects();
-                }
-            
-                InitializePlaceableObjectTemplate();
-
-                GUILayout.Label("Prefab and Image Editor", EditorStyles.boldLabel);
-
-                scrollPosition = GUILayout.BeginScrollView(scrollPosition);
-
-            
-                if (prefabs.Count <= 30)
-                {
-                    if (GUILayout.Button("Add Pair"))
-                    {
-                        CustomLog.Instance.InfoLog("Adding prefab, count is" + prefabs.Count);
-                        CustomLog.Instance.InfoLog($"Creating placeable object for {prefab.name} with image {images}");
-                        prefabs.Add(null);
-                        images.Add(null);
-                    }
-                }
-
-                for (int i = 0; i < prefabs.Count; i++)
-                {
-                    GUILayout.BeginHorizontal();
-                
-                    prefabs[i] = EditorGUILayout.ObjectField("Prefab", prefabs[i], typeof(GameObject), false) as GameObject;
-                    images[i] = EditorGUILayout.ObjectField("Image", images[i], typeof(Sprite), false) as Sprite;
-                    if (GUILayout.Button("Delete", GUILayout.Width(60)))
-                    {
-                        //If the user added an empty field with no gameobject or image attached yet
-                        if (prefabs[i] == null || images[i] == null)
-                        {
-                            prefabs.RemoveAt(i);
-                            images.RemoveAt(i);
-                            GUILayout.EndHorizontal();
-                            continue;
-                        }
-                        else
-                        {
-                            //Delete the object and scriptable object in it's folder 
-                            PlacementObjectSO toDelete = _placeableObjectSoDatabase.PlacementObjectSos.FirstOrDefault(so => so.placementObject.gameObject == prefabs[i]);
-                    
-                            if (toDelete != null)
-                            {
-                                // Construct the asset path for both the ScriptableObject and its prefab
-                                string soPath = AssetDatabase.GetAssetPath(toDelete);
-                                string prefabPath = AssetDatabase.GetAssetPath(toDelete.placementObject.gameObject);
-
-                                // Remove from the database list
-                                _placeableObjectSoDatabase.PlacementObjectSos.Remove(toDelete);
-
-                                // Delete the assets
-                                AssetDatabase.DeleteAsset(prefabPath);
-                                AssetDatabase.DeleteAsset(soPath);
-                        
-                                prefabs.RemoveAt(i);
-                                images.RemoveAt(i);
-                            }
-
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                }
-                GUILayout.EndScrollView();
-
-            
-
-            
-                if (GUILayout.Button("Create Placeable Objects"))
-                {
-                    HashSet<GameObject> uniquePrefabs = new HashSet<GameObject>();
-                    HashSet<Sprite> uniquImages = new HashSet<Sprite>();
-                
-                    CustomLog.Instance.InfoLog("Before Distinct");
-                    DebugList(prefabs);
-
-                    loadedPrefabsRef = prefabs.Distinct().ToList();
-                    loadedImageRefs = images.Distinct().ToList();
-                
-                    CustomLog.Instance.InfoLog("After Distinct");
-                    DebugList(loadedPrefabsRef);
-                
-                    for (int i = 0; i < loadedPrefabsRef.Count; i++)
-                    {
-                        CustomLog.Instance.InfoLog($"Create Obj, prefabs  => {i} name = {prefabs[i].name} ");
-                        if (loadedPrefabsRef[i] != null && !uniquePrefabs.Contains(prefabs[i]) && loadedImageRefs[i] != null)
-                        {
-                            uniquePrefabs.Add(loadedPrefabsRef[i]); // Add to set to ensure uniqueness
-                            // uniquePrefabs.Add(prefabs[i]); // Add to set to ensure uniqueness
-                            CustomLog.Instance.InfoLog("Creating Place Object for: " + loadedPrefabsRef[i].name + " Image: " + loadedImageRefs[i].texture);
-                            CreatePlaceableObject(loadedPrefabsRef[i], loadedImageRefs[i].texture);
-                        }
-                    }
-
-                    RefreshExistingPlaceableObjects(); // Refresh list to reflect the new state
-                }
-        
+                isAwaitingSecondClick = true;
+                lastInteractionTime = EditorApplication.timeSinceStartup;
+                Debug.Log("Click again to confirm Recreate Prefabs.");
+                // Start coroutine to reset after 5 seconds
+                EditorApplication.update += CheckForResetState;
             }
-            EditorGUILayout.EndVertical();
+            lastClickTime = EditorApplication.timeSinceStartup;
+        }
+        
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        // Reset button color after rendering it
+        GUI.backgroundColor = Color.white;
+    }
+
+    private void ResetButtonState()
+    {
+        isAwaitingSecondClick = false;
+        GUI.backgroundColor = Color.white; // Reset the color
+        EditorApplication.update -= CheckForResetState; // Stop the coroutine
+    }
+
+    private void CheckForResetState()
+    {
+        // Check if 5 seconds have passed since the last interaction
+        if (EditorApplication.timeSinceStartup - lastInteractionTime > 5f && isAwaitingSecondClick)
+        {
+            Debug.Log("Recreate Prefabs button reset due to inactivity.");
+            ResetButtonState();
+        }
+    }
+    
+        private void CreatePlaceableObjects()
+        {
+            HashSet<GameObject> uniquePrefabs = new HashSet<GameObject>();
+            HashSet<Sprite> uniqueImages = new HashSet<Sprite>();
+
+            loadedPrefabsRef = prefabs.Distinct().ToList();
+            loadedImageRefs = images.Distinct().ToList();
+
+            for (int i = 0; i < loadedPrefabsRef.Count; i++)
+            {
+                if (loadedPrefabsRef[i] == null) continue;
+
+                if (!uniquePrefabs.Contains(loadedPrefabsRef[i]) && loadedImageRefs[i] != null)
+                {
+                    uniquePrefabs.Add(loadedPrefabsRef[i]);
+                    CreatePlaceableObject(loadedPrefabsRef[i], loadedImageRefs[i].texture);
+                }
+            }
+
+            RefreshExistingPlaceableObjects(); // Refresh list to reflect the new state
+        }
+        
+        private void RecreatePrefabs()
+        {
+            if (_placeableObjectSoDatabase == null)
+            {
+                Debug.LogError("PlaceableObjectSODatabase is not assigned.");
+                return;
+            }
+
+            int countOfDatabaseSO = _placeableObjectSoDatabase.PlacementObjectSos.Count;
+
+            for(int i = 0; i < countOfDatabaseSO; i++)
+                // (var placeableObjectSO in _placeableObjectSoDatabase.PlacementObjectSos)
+            {
+                var placeableObjectSO = _placeableObjectSoDatabase.PlacementObjectSos[i];
+                
+                if (placeableObjectSO == null || placeableObjectSO.placementObject == null)
+                {
+                    continue;
+                }
+
+                // Instantiate the prefab
+                GameObject instantiatedPrefab = Instantiate(placeableObjectSO.placementObject.gameObject);
+
+                // Find the child with the PlacementObjectVisual script
+                var placementVisual = instantiatedPrefab.GetComponentInChildren<PlacementObjectVisual>();
+                if (placementVisual == null)
+                {
+                    Debug.LogWarning($"Prefab {instantiatedPrefab.name} does not have a child with PlacementObjectVisual script attached.");
+                    continue;
+                }
+
+                // Get the GameObject that contains the PlacementObjectVisual script
+                GameObject visualObject = placementVisual.gameObject;
+                visualObject.name = instantiatedPrefab.name;
+
+                // Remove the PlacementObjectVisual script
+                DestroyImmediate(placementVisual);
+
+                // Recreate the placeable object using the visualObject as the new prefab
+                CreatePlaceableObject(visualObject, placeableObjectSO.uiSprite);
+                
+                //Remove the old asset
+                SafeRemoveAt(i);
+
+                // Remove the "(Clone)" suffix from the name
+                instantiatedPrefab.name = instantiatedPrefab.name.Replace("(Clone)", "").Trim();
+                
+                // Destroy the instantiated prefab after use
+                DestroyImmediate(instantiatedPrefab);
+                
+
+                
+
+            }
+
+            // Refresh the editor to show the updated prefabs
+            RefreshExistingPlaceableObjects();
+            Debug.Log("Prefabs have been recreated successfully.");
         }
     
         void CheckForNulls()
@@ -262,11 +392,12 @@ namespace ARMagicBar.Resources.Editor.EditorScript
             CustomLog.EnsureInstance();
 
             // Clear current lists to avoid duplicates if this method is called multiple times
-        
+            RemoveMissingPrefabsFromDatabase();
+
             prefabs.Clear();
             images.Clear();
-        
-        
+            InitializePlaceableObjectTemplate();
+            
             // Iterate over the PlaceableObjectSODatabase and populate the lists
             if (_placeableObjectSoDatabase != null) {
                 foreach (var placeableObjectSO in _placeableObjectSoDatabase.PlacementObjectSos) {
@@ -287,25 +418,7 @@ namespace ARMagicBar.Resources.Editor.EditorScript
             }
 
         }
-    
-        void InitializePlaceableObjectTemplate()
-        {
-            CustomLog.EnsureInstance();
-
-            if (placeableObjectTemplate == null)
-            {
-                GameObject prefab = UnityEngine.Resources.Load<GameObject>("Prefabs/PlaceableObject/PlaceableObjectTemplate");
-                if (prefab != null)
-                {
-                    placeableObjectTemplate = prefab.GetComponent<TransformableObject>();
-                }
-                else
-                {
-                    Debug.LogError("Could not load the PlaceableObject prefab. Please check the path.");
-                }
-            }
-        }
-
+        
     
         /// <summary>
         /// </summary>
@@ -319,53 +432,21 @@ namespace ARMagicBar.Resources.Editor.EditorScript
             Sprite newSprite = Sprite.Create(texture, new Rect(0.0f, 0.0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             return newSprite;
         }
-    
-        void CleanupDatabase()
+
+        private void RemoveMissingPrefabsFromDatabase()
         {
-            CustomLog.EnsureInstance();
-
-        
-            if (_placeableObjectSoDatabase == null)
-            {
-                Debug.LogError("PlaceableObjectSODatabase is not assigned.");
-                return;
-            }
-
-            // Check for null or missing objects and mark them for removal
-            List<PlacementObjectSO> invalidEntries = new List<PlacementObjectSO>();
-
-            foreach (var entry in _placeableObjectSoDatabase.PlacementObjectSos)
-            {
-                if (entry == null || entry.placementObject == null || entry.placementObject.gameObject == null)
+            if (_placeableObjectSoDatabase != null && _placeableObjectSoDatabase.PlacementObjectSos != null)
+                for (int i = 0; i < _placeableObjectSoDatabase.PlacementObjectSos.Count; i++)
                 {
-                    invalidEntries.Add(entry);
+                    if (_placeableObjectSoDatabase.PlacementObjectSos[i] == null)
+                        _placeableObjectSoDatabase.PlacementObjectSos.RemoveAt(i);
                 }
-            }
-
-            // Remove all invalid entries from the database
-            foreach (var invalidEntry in invalidEntries)
-            {
-                _placeableObjectSoDatabase.PlacementObjectSos.Remove(invalidEntry);
-
-                // Additionally, if the ScriptableObject itself is not null, you might want to delete it from the asset database
-                if (invalidEntry != null)
-                {
-                    string assetPath = AssetDatabase.GetAssetPath(invalidEntry);
-                    AssetDatabase.DeleteAsset(assetPath);
-                }
-            }
-
-            // Save changes to the asset database
-            EditorUtility.SetDirty(_placeableObjectSoDatabase);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            CustomLog.Instance.InfoLog("Cleaned up PlaceableObjectSODatabase. Removed " + invalidEntries.Count + " invalid entries.");
         }
-
-
+        
         private void CreatePlaceableObject(GameObject prefab, Texture2D image)
         {
+            RemoveMissingPrefabsFromDatabase();
+            
             CustomLog.EnsureInstance();
 
             if (placeableObjectTemplate == null || prefab == null || image == null)
@@ -373,6 +454,7 @@ namespace ARMagicBar.Resources.Editor.EditorScript
                 Debug.Log("Missing template, prefab, or image. Skipping creation.");
                 return;
             }
+            
         
         
             if(_placeableObjectSoDatabase == null || _placeableObjectSoDatabase.PlacementObjectSos == null)
@@ -380,21 +462,43 @@ namespace ARMagicBar.Resources.Editor.EditorScript
                 Debug.LogError("PlaceableObjectSODatabase or its list is null. Cannot create placeable object.");
                 return;
             }
-        
-        
-            // Check for existing objects
-            var existingObject = _placeableObjectSoDatabase.PlacementObjectSos
-                .FirstOrDefault(po => po.placementObject.gameObject.name == prefab.name);
-            if (existingObject != null)
+
+            CheckSaveDirectory();
+
+
+            CustomLog.Instance.InfoLog($"_placeableObjectSoDatabase => {_placeableObjectSoDatabase} " +
+                                       $"PlacementObjectSos: {_placeableObjectSoDatabase.PlacementObjectSos}"
+                                       + $"Len: {_placeableObjectSoDatabase.PlacementObjectSos.Count}");
+            //Duplicate check
+            if (_placeableObjectSoDatabase.PlacementObjectSos.Count != 0)
             {
-                CustomLog.Instance.InfoLog($"Skipping creation: An object for {prefab.name} already exists.");
-                return;
+                CustomLog.Instance.InfoLog("_placeableObjectSoDatabase.PlacementObjectSos.Count => " 
+                    + _placeableObjectSoDatabase.PlacementObjectSos.Count + " _placeableObjectSoDatabase is " + 
+                    _placeableObjectSoDatabase.name);
+                
+                var existingObject = _placeableObjectSoDatabase.PlacementObjectSos
+                    .FirstOrDefault(po => po.placementObject.gameObject.name == prefab.name);
+                
+                
+                //Maybe exchange Image
+                if (existingObject != null)
+                {
+                    CustomLog.Instance.InfoLog($"Skipping creation: An object for {prefab.name} already exists.");
+
+                    if (existingObject.placementObject.gameObject == prefab && existingObject.uiSprite != image)
+                    {
+                        CustomLog.Instance.InfoLog("Swapping out image");
+                        existingObject.uiSprite = image;
+                    }
+                    
+                    return;
+
+                } 
             }
-        
-        
         
             //Instantiate the prefab template
             GameObject newPrefab = Instantiate(placeableObjectTemplate.gameObject);
+            
             EditorUtility.SetDirty(newPrefab);
         
         
@@ -412,7 +516,8 @@ namespace ARMagicBar.Resources.Editor.EditorScript
 
             // Save the new prefab
             //Assets/PlaceAndManipulateObjects/Resources/PlaceableObjects
-            string prefabPath = $"Assets/ARMagicBar/Resources/PlaceableObjects/{prefab.name}_Placeable.prefab";
+            string prefabPath =
+                $"{GetDatabaseDirectory()}/{prefab.name}_Placeable.prefab";
             GameObject savedPrefabAsset = PrefabUtility.SaveAsPrefabAsset(newPrefab, prefabPath);
         
             // Load the saved prefab asset to get the TransformableObject component
@@ -427,17 +532,19 @@ namespace ARMagicBar.Resources.Editor.EditorScript
         
             // Create and set up the ScriptableObject
             PlacementObjectSO placeableObject = ScriptableObject.CreateInstance<PlacementObjectSO>();
-        
 
             placeableObject.placementObject = transformableObjectComponent;
             placeableObject.uiSprite = image;
             placeableObject.nameOfObject = childPrefab.name;
-            placeableObject.name = $"{prefab.name}_PlaceableObject";
+
+            if (!placeableObject.name.Contains("_PlaceableObject"))
+            {
+                placeableObject.name = $"{prefab.name}_PlaceableObject";
+            }
         
             // Save the ScriptableObject
-            string assetPath = $"Assets/ARMagicBar/Resources/PlaceableObjects/{prefab.name}_PlaceableObject.asset";
-        
-        
+            string assetPath = $"{ GetDatabaseDirectory()}/{prefab.name}_PlaceableObject.asset";
+            
             AssetDatabase.CreateAsset(placeableObject, assetPath);
             AssetDatabase.SaveAssets(); 
             AssetDatabase.Refresh(); 
@@ -457,6 +564,8 @@ namespace ARMagicBar.Resources.Editor.EditorScript
                 CustomLog.Instance.InfoLog("Reference Object ToSo => " + referenceToSo);
             
                 referenceToSo.SetPlacementObjectSO(placeableObject);
+                referenceToSo.SetCorrespondingDatabaseSO(_placeableObjectSoDatabase);
+                
                 EditorUtility.SetDirty(referenceToSo);
                 EditorUtility.SetDirty(referenceToSo.gameObject);
             }
@@ -465,8 +574,34 @@ namespace ARMagicBar.Resources.Editor.EditorScript
         
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
-            DestroyImmediate(newPrefab); // Destroy the temporary object
+            DestroyImmediate(newPrefab); 
         
+        }
+        
+        private void SafeRemoveAt(int index)
+        {
+            if (index < 0 || index >= prefabs.Count)
+                return;
+
+            // If the prefab and image are not null, remove from the database
+            if (prefabs[index] != null && images[index] != null)
+            {
+                PlacementObjectSO toDelete = _placeableObjectSoDatabase.PlacementObjectSos.FirstOrDefault(so => so.placementObject.gameObject == prefabs[index]);
+        
+                if (toDelete != null)
+                {
+                    string soPath = AssetDatabase.GetAssetPath(toDelete);
+                    string prefabPath = AssetDatabase.GetAssetPath(toDelete.placementObject.gameObject);
+
+                    _placeableObjectSoDatabase.PlacementObjectSos.Remove(toDelete);
+
+                    AssetDatabase.DeleteAsset(prefabPath);
+                    AssetDatabase.DeleteAsset(soPath);
+                }
+            }
+    
+            prefabs.RemoveAt(index);
+            images.RemoveAt(index);
         }
     
     
@@ -476,6 +611,7 @@ namespace ARMagicBar.Resources.Editor.EditorScript
         
             foreach (var goj in list)
             {
+                if(goj == null) continue;
                 CustomLog.Instance.InfoLog("LoadedPrefRefs=> " + goj.name);
             }
         

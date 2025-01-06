@@ -9,21 +9,21 @@ namespace ARMagicBar.Resources.Scripts.Gizmo
 {
     public class ManageTransformGizmoTypeVisuals : MonoBehaviour
     {
-        [SerializeField] private GizmHolderUI _gizmoHolderUI;
+        [SerializeField] private GizmoHolderUI _gizmoHolderUI;
         [SerializeField] private List<MoveGizmoVisual> _moveGizmoVisuals;
         [SerializeField] private List<ScaleGizmoVisual> _scaleGizmoVisuals;
         [SerializeField] private List<RotateGizmoVisual> _rotateGizmoVisuals;
         
         //empty Gameobject that adjusts to the local position of an object
         [SerializeField] private Transform localGizmosTransform;
-        
+        [SerializeField] private Transform allGizmoOrigin; 
         
         private void Start()    
         {
             _gizmoHolderUI.moveButtonToggled += ToggleMoveGizmo;
             _gizmoHolderUI.scaleButtonToggled += ToggleScaleGizmo;
             _gizmoHolderUI.rotateButtonToggled += ToggleRotateGizmo;
-            GizmHolderUI.OnBackToUIGizmosToggled += HideAll;
+            GizmoHolderUI.OnBackToUIGizmosToggled += HideAll;
 
             HideAll();
             // gizmoTransformType = GizmoTransformType.none;
@@ -34,7 +34,7 @@ namespace ARMagicBar.Resources.Scripts.Gizmo
             _gizmoHolderUI.moveButtonToggled -= ToggleMoveGizmo;
             _gizmoHolderUI.scaleButtonToggled -= ToggleScaleGizmo;
             _gizmoHolderUI.rotateButtonToggled -= ToggleRotateGizmo;
-            GizmHolderUI.OnBackToUIGizmosToggled -= HideAll;
+            GizmoHolderUI.OnBackToUIGizmosToggled -= HideAll;
         }
 
         void ToggleOneGizmoActive()
@@ -56,23 +56,6 @@ namespace ARMagicBar.Resources.Scripts.Gizmo
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
-            // switch (gizmotransformType)
-            // {
-            //     case GizmoTransformType.move:
-            //         SetMoveActive();
-            //         break;
-            //     case GizmoTransformType.scale:
-            //         SetScaleActive();
-            //         break;
-            //     case GizmoTransformType.rotate:
-            //         SetRotateActive();
-            //         break;
-            //     case GizmoTransformType.none:
-            //         break;
-            //     default:
-            //         throw new ArgumentOutOfRangeException();
-            // }
         }
 
         void SetMoveActive()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ARMagicBar.Resources.Scripts.Debugging;
 using ARMagicBar.Resources.Scripts.Other;
+using ARMagicBar.Resources.Scripts.PlacementObjects;
 using ARMagicBar.Resources.Scripts.TransformLogic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,6 +17,11 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
         
         private TransformableObject placementObject; 
         private List<TransformableObject> instantiatedObjects = new();
+
+        public List<TransformableObject> getTransformableObjects
+        {
+            get => instantiatedObjects;
+        }
         
         private Camera mainCam;
         private bool placed;
@@ -27,23 +33,35 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
 
        public static ARPlacementPlaneMesh Instance;
        public event Action<TransformableObject> OnSpawnObject;
-       public static bool justPlaced = false;
+       
        
        /// <summary>
        /// Can be used for example when not placing objects but using it for something else
        /// </summary>
+
+       
+       //Fires when tapping on the screen, gives info about screenpos & objectToSpawn
        public event Action<(TransformableObject objectToSpawn, Vector2 screenPos)> OnSpawnObjectWithScreenPos; 
-       public event Action<(TransformableObject objectToSpawn, Vector3 hitPointPosition, Quaternion hitPointRotation)> OnSpawnObjectWithHitPosAndRotation; 
-
-
-
+       
+       //Fires when the raycast after tapping the screen hits something, gives info about hitPosition, rotation & objectToSpawn
+       public event Action<(TransformableObject objectToSpawn, Vector3 hitPointPosition, Quaternion hitPointRotation)> OnSpawnObjectWithHitPosAndRotation;
+       
+       //Fires after an object has been spawned with reference to the object
+       public event Action<PlacementObjectSO, GameObject> OnObjectSpawnedWithSO;
+       
+       
+       //Fires when the screen was tapped with info about the positoin
+       public event Action<Vector3> OnHitScreenAt;
+       
+       //Fires when a plane or mesh was hit with info about position and normal 
+       public event Action<(Vector3 position, Quaternion normal)> OnHitPlaneOrMeshAt;
+       
+       //Returns reference to the object that was hit by a raycast
+       public event Action<GameObject> OnHitMeshObject; 
+       
        [Header("Use deactivate spawning, when you want to use the tap for something else, e.g. select a spell in the bar and cast it")]
        [SerializeField] bool deactivateSpawning; 
-       //If you want to use the touch event for something else, subscribe to these methods.
-       public event Action<Vector3> OnHitScreenAt;
-       public event Action<(Vector3 position, Quaternion normal)> OnHitPlaneOrMeshAt;
-       public event Action<GameObject> OnHitMeshObject; 
-
+       
 
        public bool SetDeactivateSpawning
        {
@@ -106,6 +124,23 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             }
         }
 
+        //returns a raycast positon
+        public (Vector3 hitPos, Vector3 hitNorm) GetRaycastHitpointFromScreenPosition(Vector2 screenPos)
+        {
+            (Vector3 hitPosition, Quaternion hitNormal) raycastHit;
+            
+            if (placementMethod == ARPlacementMethod.meshDetection)
+            {
+                return GetPositionRayMeshing(screenPos);
+                
+            } else if (placementMethod == ARPlacementMethod.planeDetection)
+            {
+                return GetPositionARPlaneDetection(screenPos);
+            }
+
+            return (Vector3.zero, Vector3.zero);
+        }
+
         void FindAndAssignRaycastManager()
         {
             if(placementMethod == ARPlacementMethod.meshDetection) return;
@@ -120,9 +155,14 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
         }
 #endif
 
-        
+
+        private void Update()
+        {
+            CheckForPlacement();
+        }
+
         // Update is called once per frame
-        void Update()
+        void CheckForPlacement()
         {
             if(EventSystem.current == null) return;
     #if UNITY_EDITOR
@@ -136,8 +176,10 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
                 
                 if (placementMethod == ARPlacementMethod.planeDetection)
                 {
-                    // Debug.Log("Placement Method =>  PlaneDetect");
-                    TouchToRayPlaneDetection(Input.mousePosition);
+                    if (!TouchToRayMeshing(Input.mousePosition))
+                    {
+                        TouchToRayPlaneDetection(Input.mousePosition);
+                    }
                 }
                 else
                 {
@@ -169,15 +211,12 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
                     return;
                 }
                 
-                // if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
-                // {
-                //     Debug.Log("Is Pointer Over UI Object, No placement ");
-                //     return;
-                // }
-
                 if (placementMethod == ARPlacementMethod.planeDetection)
                 {
-                    TouchToRayPlaneDetection(touch.position);
+                    if (!TouchToRayMeshing(touch.position))
+                    {
+                        TouchToRayPlaneDetection(touch.position);
+                    }
                 }
                 else
                 {
@@ -215,7 +254,7 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
         }
 
         //Shoot ray against procedural AR Mesh
-        void TouchToRayMeshing(Vector3 touch)
+        bool TouchToRayMeshing(Vector3 touch)
         {
             if (deactivateSpawning)
             {
@@ -231,7 +270,50 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             {
                 OnHitMeshObject?.Invoke(hit.transform.gameObject);
                 InstantiateObjectAtPosition(hit.point, hit.transform.rotation);
+                return true;
             }
+
+            return false;
+        }
+        
+        (Vector3 pos, Vector3 norm) GetPositionRayMeshing(Vector3 touch)
+        {
+            CustomLog.Instance.InfoLog("ShootingRay AR Meshing");
+
+            Ray ray = mainCam.ScreenPointToRay(touch);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                OnHitMeshObject?.Invoke(hit.transform.gameObject);
+                InstantiateObjectAtPosition(hit.point, hit.transform.rotation);
+            }
+            
+            return (hit.point, hit.normal);
+        }
+
+        (Vector3 pos, Vector3 rot) GetPositionARPlaneDetection(Vector2 touch)
+        {
+#if UNITY_XR_ARKIT_LOADER_ENABLED || NIANTIC_LIGHTSHIP_AR_LOADER_ENABLED
+            if (deactivateSpawning)
+            {
+                OnHitScreenAt?.Invoke(touch);
+            }
+            
+            
+            Ray ray = mainCam.ScreenPointToRay(touch);
+            List<ARRaycastHit> hits = new();
+
+            arRaycastManager.Raycast(ray, hits, TrackableType.Planes);
+            CustomLog.Instance.InfoLog("ShootingRay Plane Detection, hitcount => " + hits.Count);
+            if (hits.Count > 0)
+            {
+                return (hits[0].pose.position, hits[0].pose.rotation.eulerAngles);
+                // hits[0].pose.rotation);
+            }
+#endif
+            return (Vector3.zero, Vector3.zero);
+
         }
 
         
@@ -256,11 +338,34 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
                 CustomLog.Instance.InfoLog("Preventing Spawning as deactivate Spawning is enabled");
                 (Vector3, Quaternion) positionRotation = (position, rotation);
                 OnHitPlaneOrMeshAt?.Invoke(positionRotation);
-                OnSpawnObjectWithHitPosAndRotation?.Invoke((PlacementBarLogic.Instance.GetPlacementObject(), position, rotation));
                 return;
             }
-
+            
+            OnSpawnObjectWithHitPosAndRotation?.Invoke((PlacementBarLogic.Instance.GetPlacementObject(), position, rotation));
+            
             placementObject = PlacementBarLogic.Instance.GetPlacementObject();
+            
+            CustomLog.Instance.InfoLog("Placement-Object: " + placementObject);
+            
+            if(!placementObject) return;
+            
+            ReferenceToSO soToObject = placementObject.gameObject.GetComponent<ReferenceToSO>();
+            
+            CustomLog.Instance.InfoLog("soToObject " + soToObject);
+
+
+            CustomLog.Instance.InfoLog("Corresponding SO to Object: " + 
+                                       soToObject.correspondingObject);
+
+            //When Placing is disabled
+            if (soToObject != null && !soToObject.correspondingObject.IsPlaceable || 
+                !soToObject.correspondingObject.GetIsEnabledInUI())
+            {
+                CustomLog.Instance.InfoLog($"Placement is disabled for {soToObject.correspondingObject}");
+                return;
+            }
+            
+            
             CustomLog.Instance.InfoLog("PlacementBarLogic.Instance-GetPlacementObj => " + placementObject + " "
                 + "functionReturns: " + PlacementBarLogic.Instance.GetPlacementObject());
             
@@ -273,12 +378,10 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             OnSpawnObject?.Invoke(placeObject);
             
             placeObject.transform.position = position;
-            // placeObject.transform.rotation = rotation;
+            placeObject.transform.rotation = rotation;
             
             instantiatedObjects.Add(placeObject);
-            justPlaced = true;
-
-            PlacementBarLogic.Instance.ClearObjectToInstantiate();
+            OnObjectSpawnedWithSO?.Invoke(placeObject.GetCorrespondingPlacementObject, placeObject.gameObject);
         }
     }
     

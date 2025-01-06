@@ -11,6 +11,9 @@ public class TemperatureManager : MonoBehaviour
     public TextMeshProUGUI temperatureText;
     public TextMeshProUGUI latitudeText;
     public TextMeshProUGUI longitudeText;
+
+    // testing
+    private float currentTemperature = 75.0f; // Example starting temperature
     
     private float latitude;
     private float longitude;
@@ -108,6 +111,7 @@ public class TemperatureManager : MonoBehaviour
                     float temp = weatherInfo.current.temperature_2m;
                     //float 
                     temperatureText.text = $"Temperature: {temp}°F";
+                    currentTemperature = temp;
                     Debug.Log($"Testing temperature: {temp}");
                 }
                 else
@@ -116,6 +120,18 @@ public class TemperatureManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void AdjustTemperature(float delta)
+    {
+        currentTemperature += delta;
+        UpdateTemperatureUI();
+        Debug.Log($"Temperature adjusted by {delta}°F. Current Temperature: {currentTemperature}°F");
+    }
+
+    private void UpdateTemperatureUI()
+    {
+        temperatureText.text = $"Temperature: {currentTemperature}°F";
     }
 
     [System.Serializable]

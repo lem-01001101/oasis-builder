@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dadf6873ccc14edd9d17fcc3f6446355, type: 3}
+  m_Name: InteractionPickUp
+  m_EditorClassIdentifier: 
+  nameOfInteraction: PickUp
+  icon: {fileID: 2800000, guid: e4448c0b4820e4ff2809451d0b301254, type: 3}
+  customUIPrefab: {fileID: 5342001357027867055, guid: c436d0b05ce80442cbc79d7c20e13233,
+    type: 3}

@@ -4,7 +4,6 @@ namespace ARMagicBar.Resources.Scripts.GizmoUI
 {
     public class MoveGizmoUI : MonoBehaviour, IGizmos
     {
-
         public void Show()
         {
             gameObject.SetActive(true);
