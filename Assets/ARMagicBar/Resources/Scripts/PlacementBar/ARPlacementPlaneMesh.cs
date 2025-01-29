@@ -4,6 +4,7 @@ using ARMagicBar.Resources.Scripts.Debugging;
 using ARMagicBar.Resources.Scripts.Other;
 using ARMagicBar.Resources.Scripts.PlacementObjects;
 using ARMagicBar.Resources.Scripts.TransformLogic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR.ARFoundation;
@@ -330,6 +331,7 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
         //Instantiate Object at the raycast position
         void InstantiateObjectAtPosition(Vector3 position, Quaternion rotation)
         {
+            /*
             CustomLog.Instance.InfoLog("Should instantiate object at position " + position);
 
 
@@ -382,6 +384,45 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             
             instantiatedObjects.Add(placeObject);
             OnObjectSpawnedWithSO?.Invoke(placeObject.GetCorrespondingPlacementObject, placeObject.gameObject);
+            */
+
+            // networking version
+            CustomLog.Instance.InfoLog("Should instantiate object at position " + position);
+
+            if (deactivateSpawning)
+            {
+                CustomLog.Instance.InfoLog("Preventing Spawning as deactivate Spawning is enabled");
+                (Vector3, Quaternion) positionRotation = (position, rotation);
+                OnHitPlaneOrMeshAt?.Invoke(positionRotation);
+                return;
+            }
+
+            placementObject = PlacementBarLogic.Instance.GetPlacementObject();
+            if (!placementObject) return;
+
+            TransformableObject placeObject = Instantiate(placementObject);
+            CustomLog.Instance.InfoLog("Placeobject => Instantiate " + placeObject.name);
+
+            // Networking logic
+            var networkObject = placeObject.GetComponent<NetworkObject>();
+            if (networkObject != null)
+            {
+                if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+                {
+                    networkObject.Spawn(); // Spawn for clients
+                    CustomLog.Instance.InfoLog($"Spawned network object: {placeObject.name}");
+                }
+                else
+                {
+                    Debug.LogError($"Failed to spawn object: {placeObject.name} is missing a NetworkObject component.");
+                }
+            }
+
+            placeObject.transform.position = position;
+            placeObject.transform.rotation = rotation;
+
+            instantiatedObjects.Add(placeObject);
+            OnObjectSpawnedWithSO?.Invoke(placeObject.GetCorrespondingPlacementObject, placeObject.gameObject);            
         }
     }
     
