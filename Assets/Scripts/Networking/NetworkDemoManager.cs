@@ -11,21 +11,30 @@ public class NetworkDemoManager : MonoBehaviour
 {
 
    //log for mobile
+
+   // remove
    [SerializeField]
    private TMP_Text _logOutput;
+
 
    [SerializeField]
    private Texture2D _targetImage;
 
+
    [SerializeField]
    private float _targetImageSize;
 
+
+   // remove
    [SerializeField]
    private TMP_Text _statusText;
 
+
+   // remove
    [SerializeField]
    private TMP_Text _numConnected;
 
+   
    [SerializeField]
    private TMP_InputField _roomCodeInput;
 
@@ -65,7 +74,7 @@ public class NetworkDemoManager : MonoBehaviour
       Debug.Log("Start!");
 
       HideButtons();
-      _magicBar.gameObject.SetActive(false);
+      //_magicBar.gameObject.SetActive(false);
 
       /*
             // Set SharedSpaceManager and start it
@@ -187,9 +196,13 @@ public class NetworkDemoManager : MonoBehaviour
    private string GenerateRoomCode()
    {
       const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      return new string(Enumerable.Repeat(chars, 3).Select(s => s[Random.Range(0, s.Length)]).ToArray());
+      _roomCode = new string(Enumerable.Repeat(chars, 3).Select(s => s[Random.Range(0, s.Length)]).ToArray());
+
+      return _roomCode;
    }
 
+
+   // this part not needed
    private void HideButtons()
    {
       _joinAsHostButton.gameObject.SetActive(false);
