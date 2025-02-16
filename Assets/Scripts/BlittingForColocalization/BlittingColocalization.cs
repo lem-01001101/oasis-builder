@@ -1,4 +1,3 @@
-/*
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,8 +18,9 @@ public class BlittingColocalization : MonoBehaviour
         private void Start()
         {
             m_ARCameraBackground = FindObjectOfType<ARCameraBackground>();
-            StartGameAR.OnStartSharedSpaceHost += OnStartSharedSpace;
-            StartGameAR.OnJoinSharedSpaceClient += OnStartSharedSpace;
+
+            //StartGameAR.OnStartSharedSpaceHost += OnStartSharedSpace;
+            //StartGameAR.OnJoinSharedSpaceClient += OnStartSharedSpace;
         }
 
         void OnStartSharedSpace()
@@ -92,8 +92,8 @@ public class BlittingColocalization : MonoBehaviour
 
         public void OnDestroy()
         {
-            StartGameAR.OnStartSharedSpaceHost -= OnStartSharedSpace;
-            StartGameAR.OnJoinSharedSpaceClient -= OnStartSharedSpace;
+            //StartGameAR.OnStartSharedSpaceHost -= OnStartSharedSpace;
+            //StartGameAR.OnJoinSharedSpaceClient -= OnStartSharedSpace;
         }
 
         private void CopyRenderTextureTo2DTexture()
@@ -115,4 +115,3 @@ public class BlittingColocalization : MonoBehaviour
             OnTextureRendered?.Invoke(_cameraTexture);
         }
 }
-*/

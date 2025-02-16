@@ -27,6 +27,9 @@ public class MenuUILogic : MonoBehaviour
     [SerializeField]
     private GameObject _currentTempPanel;
 
+    [SerializeField]
+    private GameObject _gameUI;
+
 
     void Start()
     {
@@ -80,8 +83,9 @@ public class MenuUILogic : MonoBehaviour
             currentMenu.SetActive(false);
         }
         _magicBar.SetActive(true);
-        _currentTempPanel.SetActive(true);
-        _oasisTempPanel.SetActive(true);
+        //_currentTempPanel.SetActive(true);
+        //_oasisTempPanel.SetActive(true);
+        _gameUI.SetActive(true);
 
 
     }

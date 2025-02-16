@@ -6,6 +6,7 @@ using Unity.Netcode;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
+using Unity.VisualScripting;
 
 public class NetworkDemoManager : MonoBehaviour
 {
@@ -39,6 +40,9 @@ public class NetworkDemoManager : MonoBehaviour
    private TMP_InputField _roomCodeInput;
 
    [SerializeField]
+   private TMP_Text _roomCodeOutput;
+
+   [SerializeField]
    private Button _joinAsHostButton;
 
    [SerializeField]
@@ -70,10 +74,10 @@ public class NetworkDemoManager : MonoBehaviour
       // Netcode connection event callback
       NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnectedCallback;
 
-      _logOutput.text = $"starting image tracking colocalization... colocalization type:{_sharedSpaceManager.GetColocalizationType()}";
+      //_logOutput.text = $"starting image tracking colocalization... colocalization type:{_sharedSpaceManager.GetColocalizationType()}";
       Debug.Log("Start!");
 
-      HideButtons();
+      //HideButtons();
       //_magicBar.gameObject.SetActive(false);
 
       /*
@@ -161,9 +165,47 @@ public class NetworkDemoManager : MonoBehaviour
       _startAsHost = true;
       _statusText.text = $"Hosting room: {_roomCode}";
       */
+
+
+
+            // IMPORTANT
+      /*
+         room code generation -> image blitting -> start space
+      */
+
+      /*
+         var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
+
+         ### this is responsible for tracking image, for colocalization --? so blitting must be done before this
+      */
+
+      /*
+         var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(
+            _roomCode,
+            5, // Max capacity
+            "multiplayer session"
+         );        
+
+         ### this is responsible for creating room and its information, blitting and roomcode generation must be done before this
+      */
+
+      /*
+         _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions)
+
+         ### this is responsible for creating the space
+         ### roomcode generation -> blitting -> call this
+      */
+
+      // should this be here?
+      _roomCode = GenerateRoomCode();
+      _roomCodeOutput.text = _roomCode;
+
+
+
+
       NetworkManager.Singleton.StartHost();
-      HideButtons();
-      _magicBar.gameObject.SetActive(true);
+      //HideButtons();
+      //_magicBar.gameObject.SetActive(true);
    }
 
    private void OnJoinAsClientClicked()
@@ -189,8 +231,8 @@ public class NetworkDemoManager : MonoBehaviour
       */
 
       NetworkManager.Singleton.StartClient();
-      HideButtons();
-      _magicBar.gameObject.SetActive(true);
+//      HideButtons();
+      //_magicBar.gameObject.SetActive(true);
    }
 
    private string GenerateRoomCode()
@@ -203,12 +245,14 @@ public class NetworkDemoManager : MonoBehaviour
 
 
    // this part not needed
+   /*
    private void HideButtons()
    {
       _joinAsHostButton.gameObject.SetActive(false);
       _joinAsClientButton.gameObject.SetActive(false);
       _roomCodeInput.gameObject.SetActive(false);
    }
+   */
 
    private void OnClientConnectedCallback(ulong clientId)
    {
@@ -216,3 +260,29 @@ public class NetworkDemoManager : MonoBehaviour
       _numConnected.text = $"Connected: {clientId}";
    }
 }
+
+
+
+
+
+
+/*
+
+flow
+- generate room code (function) from a user clicking "HOST"
+-- user clicks continue button
+- do blitting, grab image
+-- user clicks start button
+- start game (function) when user clicked "START"
+
+functions
+- GenerateRoomCode() -> returns nothing, sets _roomCode variable
+- GrabImageBlitting
+- StartMultiplayerGame()
+
+
+
+notifications
+
+
+*/
