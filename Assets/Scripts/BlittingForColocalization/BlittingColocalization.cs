@@ -21,9 +21,11 @@ public class BlittingColocalization : MonoBehaviour
 
             //StartGameAR.OnStartSharedSpaceHost += OnStartSharedSpace;
             //StartGameAR.OnJoinSharedSpaceClient += OnStartSharedSpace;
+
+            Debug.Log("is this working?");
         }
 
-        void OnStartSharedSpace()
+        public void OnStartSharedSpace()
         {
             UpdateRenderTextureSize();
             BlitCameraImage();

@@ -11,7 +11,6 @@ using Unity.VisualScripting;
 public class NetworkDemoManager : MonoBehaviour
 {
 
-   //log for mobile
 
    // remove
    [SerializeField]
@@ -57,7 +56,12 @@ public class NetworkDemoManager : MonoBehaviour
    [SerializeField]
    private GameObject _magicBar;
 
+   [SerializeField]
+   private Button _generateCodeButton;
+
    private string _roomCode;
+
+   private int _MAXPLAYERS = 5;
 
    private bool _startAsHost;
 
@@ -67,42 +71,22 @@ public class NetworkDemoManager : MonoBehaviour
       // UI event listeners
       _joinAsHostButton.onClick.AddListener(OnJoinAsHostClicked);
       _joinAsClientButton.onClick.AddListener(OnJoinAsClientClicked);
+      _generateCodeButton.onClick.AddListener(GenerateRoomCode);
+
 
       // SharedSpaceManager state change callback
       _sharedSpaceManager.sharedSpaceManagerStateChanged += OnColocalizationTrackingStateChanged;
 
+      NetworkManager.Singleton.OnServerStarted += OnServerStarted;
+
       // Netcode connection event callback
       NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnectedCallback;
 
+      // Disconnection Call back
+      NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectedCallback;
+
       //_logOutput.text = $"starting image tracking colocalization... colocalization type:{_sharedSpaceManager.GetColocalizationType()}";
       Debug.Log("Start!");
-
-      //HideButtons();
-      //_magicBar.gameObject.SetActive(false);
-
-      /*
-            // Set SharedSpaceManager and start it
-      _sharedSpaceManager.sharedSpaceManagerStateChanged += OnColocalizationTrackingStateChanged;
-
-             // Set room to join
-        var mockTrackingArgs = ISharedSpaceTrackingOptions.CreateMockTrackingOptions();
-        var roomArgs = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(
-            "ExampleRoom", // use fixed room name
-            32, // set capacity to max
-            "vps colocalization demo (mock mode)" // description
-        );
-        _sharedSpaceManager.StartSharedSpace(mockTrackingArgs, roomArgs);
-        */
-
-        var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(
-            _targetImage, _targetImageSize);
-         var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(
-            "ImageTrackingDemoRoom",
-            3, // Max capacity
-            "image tracking colocalization demo"
-         );
-
-         _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
 
     }
 
@@ -122,24 +106,23 @@ public class NetworkDemoManager : MonoBehaviour
 
        
          Instantiate(_colocalizationIndicatorPrefab, _sharedSpaceManager.SharedArOriginObject.transform, false);
+         // show button
          // _logOutput.text = "Indicator Prefab Instantiated!";
 
-         /*
          if(_startAsHost)
          {
             NetworkManager.Singleton.StartHost();
-            HideButtons();
+            //HideButtons();
             //_statusText.text = $"Hosting room: {_roomCode}";
             //j_logOutput.text = "Hosting!";
          }
          else
          {
             NetworkManager.Singleton.StartClient();
-            HideButtons();
+            //HideButtons();
             // why is this being called when you click host??
             //_logOutput.text = "Client";
          }
-         */
       }
       else
       {
@@ -149,25 +132,6 @@ public class NetworkDemoManager : MonoBehaviour
 
    private void OnJoinAsHostClicked()
    {
-
-      // Start the Shared Space as a host
-      /*
-      var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
-
-      // Generate a random 3-letter room code
-      _roomCode = GenerateRoomCode();
-      Debug.Log($"Hosting room: {_roomCode}");
-
-      var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(_roomCode, 3, "Host Room");
-
-      _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
-
-      _startAsHost = true;
-      _statusText.text = $"Hosting room: {_roomCode}";
-      */
-
-
-
             // IMPORTANT
       /*
          room code generation -> image blitting -> start space
@@ -196,51 +160,39 @@ public class NetworkDemoManager : MonoBehaviour
          ### roomcode generation -> blitting -> call this
       */
 
-      // should this be here?
-      _roomCode = GenerateRoomCode();
-      _roomCodeOutput.text = _roomCode;
+      //OutputRoomCode(); // generate room code, through function below
 
+      // blitting should be done here to get target image and its size
 
+      var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
 
+      var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(_roomCode, _MAXPLAYERS, "session");
 
-      NetworkManager.Singleton.StartHost();
+      _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
+
+      _startAsHost = true;
+      //NetworkManager.Singleton.StartHost();
       //HideButtons();
       //_magicBar.gameObject.SetActive(true);
    }
 
    private void OnJoinAsClientClicked()
    {
-      /*
-      var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
-      string roomCode = _roomCodeInput.text.Trim().ToUpper();
-      if (string.IsNullOrEmpty(roomCode))
-      {
-         Debug.LogError("Room code is empty!");
-         _statusText.text = "Enter a valid room code.";
-         return;
-      }
+      // scan image here
+      // var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions
 
-      Debug.Log($"Joining room: {roomCode}");
-
-      var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(roomCode, 3, "Client Room");
-
-      _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
+      string _curRoomName = _roomCodeInput.text;
+      var _curRoomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(_curRoomName, _MAXPLAYERS, "session");
 
       _startAsHost = false;
-      _statusText.text = $"Joining room: {_roomCode}";
-      */
-
-      NetworkManager.Singleton.StartClient();
-//      HideButtons();
-      //_magicBar.gameObject.SetActive(true);
    }
 
-   private string GenerateRoomCode()
+   private void GenerateRoomCode()
    {
       const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       _roomCode = new string(Enumerable.Repeat(chars, 3).Select(s => s[Random.Range(0, s.Length)]).ToArray());
 
-      return _roomCode;
+      _roomCodeOutput.text = _roomCode;
    }
 
 
@@ -254,10 +206,31 @@ public class NetworkDemoManager : MonoBehaviour
    }
    */
 
+   private void OnServerStarted()
+   {
+      Debug.Log("Netcode server is ready.");
+   }
+
    private void OnClientConnectedCallback(ulong clientId)
    {
       Debug.Log($"Client connected: {clientId}");
       _numConnected.text = $"Connected: {clientId}";
+   }
+
+   private void OnClientDisconnectedCallback(ulong clientId)
+   {
+      var selfId = NetworkManager.Singleton.LocalClientId;
+         if (NetworkManager.Singleton)
+         {
+            if (NetworkManager.Singleton.IsHost && clientId != NetworkManager.ServerClientId)
+            {
+                    // ignore other clients' disconnect event
+               return;
+            }
+                // show the UI panel for ending
+               //_endPanelText.text = "Disconnected from network";
+               //_endPanel.SetActive(true);
+         }
    }
 }
 
