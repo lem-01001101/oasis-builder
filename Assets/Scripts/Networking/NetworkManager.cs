@@ -137,7 +137,7 @@ public class NetworkDemoManager : MonoBehaviour
    {
             // IMPORTANT
       /*
-         room code generation -> image blitting -> start space
+         room code generation -> image blitting -> start space -> start tracking -> game start once colocalization is active
       */
 
       /*
@@ -176,6 +176,9 @@ public class NetworkDemoManager : MonoBehaviour
       _startAsHost = true;
 
       Debug.Log($"Session started -> (Room Code: {_roomCode})");
+      Debug.Log($"New Target Image: {_targetImage.name}");
+
+      // this is where tracking starts
 
       //NetworkManager.Singleton.StartHost();
       //HideButtons();
