@@ -85,6 +85,9 @@ public class NetworkDemoManager : MonoBehaviour
       // Disconnection Call back
       NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectedCallback;
 
+
+      //BlittingColocalization.OnTextureRendered += 
+
       //_logOutput.text = $"starting image tracking colocalization... colocalization type:{_sharedSpaceManager.GetColocalizationType()}";
       Debug.Log("Start!");
 
@@ -101,8 +104,8 @@ public class NetworkDemoManager : MonoBehaviour
          Debug.Log("Colocalization active! Players are synced.");
          _logOutput.text = "Colocalization Active!";
 
-         _joinAsHostButton.gameObject.SetActive(true);
-         _joinAsClientButton.gameObject.SetActive(true);
+         //_joinAsHostButton.gameObject.SetActive(true);
+         //_joinAsClientButton.gameObject.SetActive(true);
 
        
          Instantiate(_colocalizationIndicatorPrefab, _sharedSpaceManager.SharedArOriginObject.transform, false);
@@ -171,6 +174,9 @@ public class NetworkDemoManager : MonoBehaviour
       _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
 
       _startAsHost = true;
+
+      Debug.Log($"Session started -> (Room Code: {_roomCode})");
+
       //NetworkManager.Singleton.StartHost();
       //HideButtons();
       //_magicBar.gameObject.SetActive(true);
@@ -180,9 +186,12 @@ public class NetworkDemoManager : MonoBehaviour
    {
       // scan image here
       // var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions
+      var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
 
       string _curRoomName = _roomCodeInput.text;
       var _curRoomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(_curRoomName, _MAXPLAYERS, "session");
+
+      _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, _curRoomOptions);
 
       _startAsHost = false;
    }
@@ -196,16 +205,27 @@ public class NetworkDemoManager : MonoBehaviour
    }
 
 
-   // this part not needed
-   /*
-   private void HideButtons()
-   {
-      _joinAsHostButton.gameObject.SetActive(false);
-      _joinAsClientButton.gameObject.SetActive(false);
-      _roomCodeInput.gameObject.SetActive(false);
-   }
-   */
 
+   // blit calls
+   private void OnEnable()
+   {
+      // Subscribe to the blitting script's event
+      BlittingColocalization.OnTextureRendered += HandleTextureRendered;
+   }
+
+   private void OnDisable()
+   {
+    // Unsubscribe to avoid memory leaks or null refs
+      BlittingColocalization.OnTextureRendered -= HandleTextureRendered;
+   }
+
+   private void HandleTextureRendered(Texture2D capturedTex)
+   {
+      _targetImage = capturedTex;
+   }
+
+
+   // networking checks
    private void OnServerStarted()
    {
       Debug.Log("Netcode server is ready.");
@@ -214,7 +234,7 @@ public class NetworkDemoManager : MonoBehaviour
    private void OnClientConnectedCallback(ulong clientId)
    {
       Debug.Log($"Client connected: {clientId}");
-      _numConnected.text = $"Connected: {clientId}";
+      _numConnected.text = $"{clientId}";
    }
 
    private void OnClientDisconnectedCallback(ulong clientId)
