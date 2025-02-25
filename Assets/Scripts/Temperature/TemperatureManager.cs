@@ -19,6 +19,9 @@ public class TemperatureManager : MonoBehaviour
     public TextMeshProUGUI oasisTempText;
     public TextMeshProUGUI oasisDifferenceText;
 
+    public TextMeshProUGUI menuCurrentTempText;
+    public TextMeshProUGUI menuOasisDifferenceText;
+
 
     // testing
     private float currentTemperature = 75.0f; // Example starting temperature
@@ -158,6 +161,10 @@ public class TemperatureManager : MonoBehaviour
         //temperatureText.text = $"Temperature: {currntTemperature}°F";
         oasisDifferenceText.text = $"{totalDelta}°F";
         oasisTempText.text = $"{currentTemperature}°F - {totalDelta}°F";
+
+        menuCurrentTempText.text = $"{currentTemperature}";
+        menuOasisDifferenceText.text = $"{totalDelta}";
+
     }
 
     [System.Serializable]

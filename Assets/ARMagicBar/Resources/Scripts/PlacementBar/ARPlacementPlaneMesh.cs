@@ -411,10 +411,11 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
                 {
                     networkObject.Spawn(); // Spawn for clients
                     //CustomLog.Instance.InfoLog($"Spawned network object: {placeObject.name}");
+                    Debug.Log("Spawn!");
                 }
                 else
                 {
-                    //Debug.LogError($"Failed to spawn object: {placeObject.name} is missing a NetworkObject component.");
+                    Debug.LogError($"Failed to spawn object: {placeObject.name} is missing a NetworkObject component.");
                 }
             }
 

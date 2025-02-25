@@ -15,11 +15,15 @@ public class MagicBarIntegration : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //MenuUILogic isGameOn = FindObjectOfType<MenuUILogic>();
-        //if(isGameOn)
-        //{
+        if (ARPlacementPlaneMesh.Instance == null)
+        {
+            Debug.LogError("ARPlacementPlaneMesh.Instance is NULL! Make sure ARPlacementPlaneMesh is in the scene.");
+        }
+        else
+        {
+            Debug.Log("ARPlacementPlaneMesh.Instance is initialized.");
             ARPlacementPlaneMesh.Instance.OnObjectSpawnedWithSO += OnObjectSpawned;
-        //}
+        }
     }
 
     private void OnObjectSpawned(PlacementObjectSO objectData, GameObject spawnedObject)
