@@ -54,6 +54,15 @@ public class NetworkDemoManager : MonoBehaviour
    private GameObject _colocalizationIndicatorPrefab;
 
    [SerializeField]
+   private TMP_Text _scanningText;
+
+   [SerializeField]
+   private TMP_Text _scanningSuccess;
+
+   [SerializeField]
+   private GameObject _startMultiplayerGameButton;
+
+   [SerializeField]
    private GameObject _magicBar;
 
    [SerializeField]
@@ -69,8 +78,11 @@ public class NetworkDemoManager : MonoBehaviour
     void Start()
     {
       // UI event listeners
+      // Continue button on Host/Join TargetImage
       _joinAsHostButton.onClick.AddListener(OnJoinAsHostClicked);
       _joinAsClientButton.onClick.AddListener(OnJoinAsClientClicked);
+
+      // generate code
       _generateCodeButton.onClick.AddListener(GenerateRoomCode);
 
 
@@ -95,22 +107,17 @@ public class NetworkDemoManager : MonoBehaviour
 
    private void OnColocalizationTrackingStateChanged(SharedSpaceManager.SharedSpaceManagerStateChangeEventArgs args)
    {
-
-      
-      _logOutput.text = $"Trying to track image... Tracking={args.Tracking}";
-      //Debug.Log($"Trying to track image... Tracking={args.Tracking}");
       if (args.Tracking)
       {
          Debug.Log("Colocalization active! Players are synced.");
-         _logOutput.text = "Colocalization Active!";
 
-         //_joinAsHostButton.gameObject.SetActive(true);
-         //_joinAsClientButton.gameObject.SetActive(true);
-
-       
+         //screen text
+         _scanningText.gameObject.SetActive(false);
+         _scanningSuccess.gameObject.SetActive(true);
+         _startMultiplayerGameButton.SetActive(true);
+               
+         // instantiate an object to signify target image have been scanned
          Instantiate(_colocalizationIndicatorPrefab, _sharedSpaceManager.SharedArOriginObject.transform, false);
-         // show button
-         // _logOutput.text = "Indicator Prefab Instantiated!";
 
          if(_startAsHost)
          {
@@ -195,6 +202,8 @@ public class NetworkDemoManager : MonoBehaviour
       var _curRoomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(_curRoomName, _MAXPLAYERS, "session");
 
       _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, _curRoomOptions);
+
+      _scanningText.text = "Scanning Target Image... If Target Image not tracking, recheck Code and/or retake Target Image.";
 
       _startAsHost = false;
    }

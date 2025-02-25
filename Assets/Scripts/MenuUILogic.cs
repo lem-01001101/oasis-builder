@@ -19,6 +19,9 @@ public class MenuUILogic : MonoBehaviour
     private Button _singlePlayerGameButton;
 
     [SerializeField]
+    private Button _multiplayerGameButton;
+
+    [SerializeField]
     private GameObject _magicBar;
 
     [SerializeField]
@@ -41,6 +44,8 @@ public class MenuUILogic : MonoBehaviour
         }
 
         _singlePlayerGameButton.onClick.AddListener(SinglePlayerGameStart);
+        _multiplayerGameButton.onClick.AddListener(MultiplayerGameStart);
+
         /*
         _magicBar.gameObject.SetActive(false);
         _oasisTempPanel.gameObject.SetActive(false);
@@ -73,7 +78,8 @@ public class MenuUILogic : MonoBehaviour
 
     public void ShowGameMenu()
     {
-
+        _magicBar.SetActive(false);
+        _gameUI.SetActive(false);
     }
 
     private void SinglePlayerGameStart()
@@ -86,8 +92,18 @@ public class MenuUILogic : MonoBehaviour
         //_currentTempPanel.SetActive(true);
         //_oasisTempPanel.SetActive(true);
         _gameUI.SetActive(true);
+        isGameOn = true;
+    }
 
-
+    private void MultiplayerGameStart()
+    {
+        if(currentMenu != null)
+        {
+            currentMenu.SetActive(false);
+        }
+        _magicBar.SetActive(true);
+        _gameUI.SetActive(true);
+        isGameOn = false;
     }
 
     public void IsGameOn()
