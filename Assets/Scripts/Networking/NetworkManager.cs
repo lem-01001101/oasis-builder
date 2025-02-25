@@ -122,6 +122,7 @@ public class NetworkDemoManager : MonoBehaviour
          if(_startAsHost)
          {
             NetworkManager.Singleton.StartHost();
+            Debug.Log("Hosting!");
             //HideButtons();
             //_statusText.text = $"Hosting room: {_roomCode}";
             //j_logOutput.text = "Hosting!";
@@ -129,6 +130,7 @@ public class NetworkDemoManager : MonoBehaviour
          else
          {
             NetworkManager.Singleton.StartClient();
+            Debug.Log("Client!");
             //HideButtons();
             // why is this being called when you click host??
             //_logOutput.text = "Client";
@@ -174,13 +176,13 @@ public class NetworkDemoManager : MonoBehaviour
 
       // blitting should be done here to get target image and its size
 
+      _startAsHost = true;
       var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
 
       var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(_roomCode, _MAXPLAYERS, "session");
 
       _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions);
 
-      _startAsHost = true;
 
       Debug.Log($"Session started -> (Room Code: {_roomCode})");
       Debug.Log($"New Target Image: {_targetImage.name}");

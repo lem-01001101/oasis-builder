@@ -4,6 +4,7 @@ using UnityEngine;
 using ARMagicBar.Resources.Scripts.PlacementObjects;
 using ARMagicBar.Resources.Scripts.PlacementBar;
 using System;
+using UnityEditor;
 
 
 public class MagicBarIntegration : MonoBehaviour
@@ -14,7 +15,11 @@ public class MagicBarIntegration : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ARPlacementPlaneMesh.Instance.OnObjectSpawnedWithSO += OnObjectSpawned;
+        //MenuUILogic isGameOn = FindObjectOfType<MenuUILogic>();
+        //if(isGameOn)
+        //{
+            ARPlacementPlaneMesh.Instance.OnObjectSpawnedWithSO += OnObjectSpawned;
+        //}
     }
 
     private void OnObjectSpawned(PlacementObjectSO objectData, GameObject spawnedObject)
@@ -56,7 +61,9 @@ public class MagicBarIntegration : MonoBehaviour
             Debug.Log("Planted");
         }
         //more cases or retrieve metadata dynamically
-        FindObjectOfType<NotificationManager>().ShowNotification("Temperature has been reduced by " + change_temp + "°C");
+        //FindObjectOfType<NotificationManager>().ShowNotification("Temperature has been reduced by " + change_temp + "°C");
+        //temperatureManager.UpdateTemperatureUI();
+        Debug.Log($"Change temp:{change_temp}");
 
     }
 }

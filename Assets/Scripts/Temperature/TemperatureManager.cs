@@ -153,7 +153,7 @@ public class TemperatureManager : MonoBehaviour
         Debug.Log($"Temperature adjusted by {delta}°F. Current Temperature: {currentTemperature}°F");
     }
 
-    private void UpdateTemperatureUI()
+    public void UpdateTemperatureUI()
     {
         //temperatureText.text = $"Temperature: {currntTemperature}°F";
         oasisDifferenceText.text = $"{totalDelta}°F";

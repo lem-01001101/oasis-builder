@@ -387,7 +387,7 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             */
 
             // networking version
-            CustomLog.Instance.InfoLog("Should instantiate object at position " + position);
+            //CustomLog.Instance.InfoLog("Should instantiate object at position " + position);
 
             if (deactivateSpawning)
             {
@@ -401,7 +401,7 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
             if (!placementObject) return;
 
             TransformableObject placeObject = Instantiate(placementObject);
-            CustomLog.Instance.InfoLog("Placeobject => Instantiate " + placeObject.name);
+            //CustomLog.Instance.InfoLog("Placeobject => Instantiate " + placeObject.name);
 
             // Networking logic
             var networkObject = placeObject.GetComponent<NetworkObject>();
@@ -410,11 +410,11 @@ namespace ARMagicBar.Resources.Scripts.PlacementBar
                 if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
                     networkObject.Spawn(); // Spawn for clients
-                    CustomLog.Instance.InfoLog($"Spawned network object: {placeObject.name}");
+                    //CustomLog.Instance.InfoLog($"Spawned network object: {placeObject.name}");
                 }
                 else
                 {
-                    Debug.LogError($"Failed to spawn object: {placeObject.name} is missing a NetworkObject component.");
+                    //Debug.LogError($"Failed to spawn object: {placeObject.name} is missing a NetworkObject component.");
                 }
             }
 

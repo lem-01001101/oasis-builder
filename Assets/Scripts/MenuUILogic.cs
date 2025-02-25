@@ -30,6 +30,10 @@ public class MenuUILogic : MonoBehaviour
     [SerializeField]
     private GameObject _currentTempPanel;
 
+
+    [SerializeField]
+    private GameObject _gamePauseMenu;
+
     [SerializeField]
     private GameObject _gameUI;
 
@@ -46,11 +50,6 @@ public class MenuUILogic : MonoBehaviour
         _singlePlayerGameButton.onClick.AddListener(SinglePlayerGameStart);
         _multiplayerGameButton.onClick.AddListener(MultiplayerGameStart);
 
-        /*
-        _magicBar.gameObject.SetActive(false);
-        _oasisTempPanel.gameObject.SetActive(false);
-        _currentTempPanel.gameObject.SetActive(false);
-        */
     }
 
     public void SwitchMenu(GameObject newMenu)
@@ -58,6 +57,12 @@ public class MenuUILogic : MonoBehaviour
         if (currentMenu != null)
         {
             currentMenu.SetActive(false);
+        }
+        if(isGameOn)
+        {
+            isGameOn = false;
+            // if you are in the menu (aside for the gamePauseMenu, game should be off)
+            _gamePauseMenu.SetActive(false);
         }
         newMenu.SetActive(true);
         menuStack.Push(newMenu);
@@ -78,8 +83,22 @@ public class MenuUILogic : MonoBehaviour
 
     public void ShowGameMenu()
     {
-        _magicBar.SetActive(false);
-        _gameUI.SetActive(false);
+        if(isGameOn)
+        {
+            _magicBar.SetActive(false);
+            _gameUI.SetActive(false);
+            _gamePauseMenu.SetActive(true);
+        }
+    }
+
+    public void ResumeGame()
+    {
+        if (isGameOn)
+        {
+            _gamePauseMenu.SetActive(false);
+            _magicBar.SetActive(true);
+            _gameUI.SetActive(true);
+        }
     }
 
     private void SinglePlayerGameStart()
@@ -103,12 +122,12 @@ public class MenuUILogic : MonoBehaviour
         }
         _magicBar.SetActive(true);
         _gameUI.SetActive(true);
-        isGameOn = false;
+        isGameOn = true;
     }
 
-    public void IsGameOn()
+    public bool IsGameOn()
     {
-
+        return isGameOn;
     }
 
 
