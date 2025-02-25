@@ -1522,7 +1522,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -90.504, y: -30.062}
+  m_AnchoredPosition: {x: -112.70877, y: -30.899158}
   m_SizeDelta: {x: 184.7514, y: 27.5987}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &214116719
@@ -4284,7 +4284,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 60.423866, y: -2.462}
+  m_AnchoredPosition: {x: 38.219093, y: -3.299158}
   m_SizeDelta: {x: 161.4026, y: 27.598}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &597542578
@@ -5713,8 +5713,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 243, y: -108}
-  m_SizeDelta: {x: 396.55933, y: 124.97992}
+  m_AnchoredPosition: {x: 264.21014, y: -108}
+  m_SizeDelta: {x: 438.9796, y: 124.9799}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &898854545
 MonoBehaviour:
@@ -7273,7 +7273,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -104.49524, y: -2.4628487}
+  m_AnchoredPosition: {x: -126.7, y: -3.3}
   m_SizeDelta: {x: 156.7683, y: 27.5987}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1093064197
@@ -7543,8 +7543,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 101.25222, y: -30.06}
-  m_SizeDelta: {x: 185.9005, y: 27.598}
+  m_AnchoredPosition: {x: 100.81252, y: -30.897158}
+  m_SizeDelta: {x: 229.4307, y: 27.598}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1143229605
 MonoBehaviour:
@@ -9940,6 +9940,7 @@ GameObject:
   - component: {fileID: 1479709782}
   - component: {fileID: 1479709781}
   - component: {fileID: 1479709780}
+  - component: {fileID: 1479709785}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -10154,6 +10155,50 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &1479709785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1479709778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1001 &1491078390
 PrefabInstance:
   m_ObjectHideFlags: 0

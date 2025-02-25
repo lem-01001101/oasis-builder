@@ -159,11 +159,12 @@ public class TemperatureManager : MonoBehaviour
     public void UpdateTemperatureUI()
     {
         //temperatureText.text = $"Temperature: {currntTemperature}°F";
+        float totalOasisDifference = currentTemperature + totalDelta;
         oasisDifferenceText.text = $"{totalDelta}°F";
-        oasisTempText.text = $"{currentTemperature}°F - {totalDelta}°F";
+        oasisTempText.text = $"{currentTemperature}°F{totalDelta}°F = {totalOasisDifference}°F";
 
-        menuCurrentTempText.text = $"{currentTemperature}";
-        menuOasisDifferenceText.text = $"{totalDelta}";
+        menuCurrentTempText.text = $"{currentTemperature}°F";
+        menuOasisDifferenceText.text = $"{totalOasisDifference}°F";
 
     }
 

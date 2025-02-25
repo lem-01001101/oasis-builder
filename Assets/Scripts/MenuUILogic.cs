@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ARMagicBar.Resources.Scripts.PlacementBar;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -63,6 +64,8 @@ public class MenuUILogic : MonoBehaviour
             isGameOn = false;
             // if you are in the menu (aside for the gamePauseMenu, game should be off)
             _gamePauseMenu.SetActive(false);
+
+            // REMOVE ALL OBJECTS
         }
         newMenu.SetActive(true);
         menuStack.Push(newMenu);
