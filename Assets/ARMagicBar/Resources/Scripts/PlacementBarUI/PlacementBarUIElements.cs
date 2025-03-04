@@ -143,7 +143,7 @@ namespace ARMagicBar.Resources.Scripts.PlacementBarUI
                     uiObjectParentRectTransform.anchorMin = new Vector2(0.5f, 0); 
                     uiObjectParentRectTransform.anchorMax = new Vector2(0.5f, 0);
                     uiObjectParentRectTransform.pivot = new Vector2(0.5f, 0);
-                    uiObjectParentRectTransform.anchoredPosition = new Vector2(0, 0);  
+                    uiObjectParentRectTransform.anchoredPosition = new Vector2(0, 50);  
                     break;
                 case PlacementBarPosition.left:
                     placementBarParentGridLayoutGroup.startAxis = GridLayoutGroup.Axis.Horizontal;
