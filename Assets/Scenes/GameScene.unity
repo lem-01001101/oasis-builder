@@ -6142,6 +6142,11 @@ PrefabInstance:
       propertyPath: autoDeselectOnPlace
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3599775966890586998, guid: 6a9e6890f239e4a2f825b87d950258e3,
+        type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3616427437098488584, guid: 6a9e6890f239e4a2f825b87d950258e3,
         type: 3}
       propertyPath: m_SizeDelta.y

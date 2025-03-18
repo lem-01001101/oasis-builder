@@ -9,10 +9,8 @@ using UnityEditor;
 
 public class MagicBarIntegration : MonoBehaviour
 {
-
     public TemperatureManager temperatureManager;
 
-    // Start is called before the first frame update
     void Start()
     {
         if (ARPlacementPlaneMesh.Instance == null)
@@ -24,7 +22,10 @@ public class MagicBarIntegration : MonoBehaviour
             Debug.Log("ARPlacementPlaneMesh.Instance is initialized.");
             ARPlacementPlaneMesh.Instance.OnObjectSpawnedWithSO += OnObjectSpawned;
         }
+
+        
     }
+
 
     private void OnObjectSpawned(PlacementObjectSO objectData, GameObject spawnedObject)
     {
@@ -64,10 +65,9 @@ public class MagicBarIntegration : MonoBehaviour
             change_temp = "-1";
             Debug.Log("Planted");
         }
-        //more cases or retrieve metadata dynamically
-        //FindObjectOfType<NotificationManager>().ShowNotification("Temperature has been reduced by " + change_temp + "°C");
-        //temperatureManager.UpdateTemperatureUI();
+
         Debug.Log($"Change temp:{change_temp}");
 
     }
+
 }

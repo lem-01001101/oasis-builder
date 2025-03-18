@@ -14,23 +14,7 @@ public class ControlBlitImage : MonoBehaviour
         {
             BlitImageUI.SetActive(false);
             retakePicture.SetActive(false);
-            //StartGameAR.OnStartSharedSpace += StartNetworkingManagerSharedARImageOnOnSharedSpaceStarted;
-            //StartGameAR.OnStartGame += StartNetworkingManagerSharedARImageOnOnStartGame;
         }
-
-    /*
-        public override void OnNetworkDespawn()
-        {
-            //StartGameAR.OnStartSharedSpace -= StartNetworkingManagerSharedARImageOnOnSharedSpaceStarted;
-            //StartGameAR.OnStartGame -= StartNetworkingManagerSharedARImageOnOnStartGame;
-        }
-
-        public override void OnDestroy()
-        {
-            //StartGameAR.OnStartSharedSpace -= StartNetworkingManagerSharedARImageOnOnSharedSpaceStarted;
-            //StartGameAR.OnStartGame -= StartNetworkingManagerSharedARImageOnOnStartGame;
-        }
-        */
 
         private void StartNetworkingManagerSharedARImageOnOnStartGame()
         {

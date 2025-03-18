@@ -19,9 +19,6 @@ public class BlittingColocalization : MonoBehaviour
         {
             m_ARCameraBackground = FindObjectOfType<ARCameraBackground>();
 
-            //StartGameAR.OnStartSharedSpaceHost += OnStartSharedSpace;
-            //StartGameAR.OnJoinSharedSpaceClient += OnStartSharedSpace;
-
             Debug.Log("is this working?");
         }
 
@@ -33,32 +30,25 @@ public class BlittingColocalization : MonoBehaviour
         
         private void BlitCameraImage()
         {
-                // Create a new command buffer
                 var commandBuffer = new CommandBuffer();
                 commandBuffer.name = "AR Camera Background Blit Pass";
 
-                // Get a reference to the AR Camera Background's main texture
-                // We will copy this texture into our chosen render texture
                 var texture = !m_ARCameraBackground.material.HasProperty("_MainTex") ?
                     null : m_ARCameraBackground.material.GetTexture("_MainTex");
 
-                // Save references to the active render target before we overwrite it
                 var colorBuffer = Graphics.activeColorBuffer;
                 var depthBuffer = Graphics.activeDepthBuffer;
 
-                // Set  Unity's render target to our render texture
                 Graphics.SetRenderTarget(m_RenderTexture);
 
-                // Clear the render target before we render new pixels into it
                 commandBuffer.ClearRenderTarget(true, false, Color.clear);
 
-                // Blit the AR Camera Background into the render target
                 commandBuffer.Blit(
                     texture,
                     BuiltinRenderTextureType.CurrentActive,
                     m_ARCameraBackground.material);
 
-                // Execute the command buffer
+                // execute the command buffer
                 Graphics.ExecuteCommandBuffer(commandBuffer);
 
                 Graphics.SetRenderTarget(colorBuffer, depthBuffer);

@@ -28,6 +28,8 @@ namespace ARMagicBar.Resources.Scripts.Inventory
         private int amountOfRows;
         private float heightOfParent;
 
+        public MenuUILogic uiPanel;
+
         private void Awake()
         {
             lastOrientation = Screen.orientation;

@@ -15,6 +15,8 @@ namespace ARMagicBar.Resources.Scripts.PlacementBarUI
 {
     public class PlacementBarUIElements : MonoBehaviour
     {
+        // panel
+
         [HideInInspector]
         [SerializeField] private Transform uiObjectParent;
         [HideInInspector]
@@ -197,6 +199,8 @@ namespace ARMagicBar.Resources.Scripts.PlacementBarUI
             isInventoryOpen = false;
             uiInventoryObject.gameObject.SetActive(false);
         }
+
+        // ui panel toggle
 
         void Start()
         {
@@ -615,11 +619,17 @@ namespace ARMagicBar.Resources.Scripts.PlacementBarUI
         void HideInventoryButton()
         {
             inventoryUiItem.gameObject.SetActive(false);
+
+            //
+            //uiManager.HideUI();
         }
 
         void ShowInventoryButton()
         {
             inventoryUiItem.gameObject.SetActive(true);
+
+            //
+            //uiManager.ShowUI();
         }
 
         public void ShowUIElements()

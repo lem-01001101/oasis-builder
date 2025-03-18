@@ -70,7 +70,6 @@ public class MenuUILogic : MonoBehaviour
         newMenu.SetActive(true);
         menuStack.Push(newMenu);
         currentMenu = newMenu;
-        
     }
 
     public void GoBack()
@@ -103,6 +102,7 @@ public class MenuUILogic : MonoBehaviour
             _gameUI.SetActive(true);
         }
     }
+
 
     private void SinglePlayerGameStart()
     {

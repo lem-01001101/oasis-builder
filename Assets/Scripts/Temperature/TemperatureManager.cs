@@ -99,8 +99,6 @@ public class TemperatureManager : MonoBehaviour
             latitude = Input.location.lastData.latitude;
             longitude = Input.location.lastData.longitude;
             Debug.Log($"Latitude: {latitude}, Longitude: {longitude}");
-            ///longitudeText.text = $"Longitude: {longitude}";
-            //latitudeText.text = $"Latitude: {latitude}";
 
             Input.location.Stop();
 
@@ -150,7 +148,7 @@ public class TemperatureManager : MonoBehaviour
 
     public void AdjustTemperature(float delta)
     {
-        currentTemperature += delta;
+        //currentTemperature += delta;
         totalDelta += delta;
         UpdateTemperatureUI();
         Debug.Log($"Temperature adjusted by {delta}°F. Current Temperature: {currentTemperature}°F");

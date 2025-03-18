@@ -11,7 +11,6 @@ using Unity.VisualScripting;
 public class NetworkDemoManager : MonoBehaviour
 {
 
-
    // remove
    [SerializeField]
    private TMP_Text _logOutput;
@@ -77,8 +76,6 @@ public class NetworkDemoManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-      // UI event listeners
-      // Continue button on Host/Join TargetImage
       _joinAsHostButton.onClick.AddListener(OnJoinAsHostClicked);
       _joinAsClientButton.onClick.AddListener(OnJoinAsClientClicked);
 
@@ -97,10 +94,6 @@ public class NetworkDemoManager : MonoBehaviour
       // Disconnection Call back
       NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectedCallback;
 
-
-      //BlittingColocalization.OnTextureRendered += 
-
-      //_logOutput.text = $"starting image tracking colocalization... colocalization type:{_sharedSpaceManager.GetColocalizationType()}";
       Debug.Log("Start!");
 
     }
@@ -111,7 +104,6 @@ public class NetworkDemoManager : MonoBehaviour
       {
          Debug.Log("Colocalization active! Players are synced.");
 
-         //screen text
          _scanningText.gameObject.SetActive(false);
          _scanningSuccess.gameObject.SetActive(true);
          _startMultiplayerGameButton.SetActive(true);
@@ -123,17 +115,12 @@ public class NetworkDemoManager : MonoBehaviour
          {
             NetworkManager.Singleton.StartHost();
             Debug.Log("Hosting!");
-            //HideButtons();
-            //_statusText.text = $"Hosting room: {_roomCode}";
-            //j_logOutput.text = "Hosting!";
+
          }
          else
          {
             NetworkManager.Singleton.StartClient();
             Debug.Log("Client!");
-            //HideButtons();
-            // why is this being called when you click host??
-            //_logOutput.text = "Client";
          }
       }
       else
@@ -144,38 +131,6 @@ public class NetworkDemoManager : MonoBehaviour
 
    private void OnJoinAsHostClicked()
    {
-            // IMPORTANT
-      /*
-         room code generation -> image blitting -> start space -> start tracking -> game start once colocalization is active
-      */
-
-      /*
-         var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
-
-         ### this is responsible for tracking image, for colocalization --? so blitting must be done before this
-      */
-
-      /*
-         var roomOptions = ISharedSpaceRoomOptions.CreateLightshipRoomOptions(
-            _roomCode,
-            5, // Max capacity
-            "multiplayer session"
-         );        
-
-         ### this is responsible for creating room and its information, blitting and roomcode generation must be done before this
-      */
-
-      /*
-         _sharedSpaceManager.StartSharedSpace(imageTrackingOptions, roomOptions)
-
-         ### this is responsible for creating the space
-         ### roomcode generation -> blitting -> call this
-      */
-
-      //OutputRoomCode(); // generate room code, through function below
-
-      // blitting should be done here to get target image and its size
-
       _startAsHost = true;
       var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
 
@@ -187,17 +142,10 @@ public class NetworkDemoManager : MonoBehaviour
       Debug.Log($"Session started -> (Room Code: {_roomCode})");
       Debug.Log($"New Target Image: {_targetImage.name}");
 
-      // this is where tracking starts
-
-      //NetworkManager.Singleton.StartHost();
-      //HideButtons();
-      //_magicBar.gameObject.SetActive(true);
    }
 
    private void OnJoinAsClientClicked()
    {
-      // scan image here
-      // var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions
       var imageTrackingOptions = ISharedSpaceTrackingOptions.CreateImageTrackingOptions(_targetImage, _targetImageSize);
 
       string _curRoomName = _roomCodeInput.text;
